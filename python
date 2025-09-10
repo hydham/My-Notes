@@ -1,0 +1,2407 @@
+Python Interview Questions & Answers
+Notes
+Python Handwritten Notes
+Decorators in python?
+Answer. A decorator is a function that takes another function and extends its behaviour without explicitly modifying it. They are implemented using higher-order functions (functions that take another function as input and return a modified function). 
+In Python, decorators are usually defined as functions that return a new function. You apply a decorator to a function by using the @ symbol above the function definition
+How Decorators Work:
+A decorator is a function that takes another function as an argument.
+It returns a new function with added or modified behavior.
+The @decorator_name syntax is used to apply a decorator to a function.
+Basic example of Decorator:
+In this example, decorator prints a message before & after a function is called
+# Define a decorator
+
+def my_decorator(func):
+    def wrapper(*args, **kwargs):
+        print("Before function call")
+        result = func(*args, **kwargs)
+        print("After function call")
+        return result
+    return wrapper
+
+# Apply the decorator
+@my_decorator
+def greet(name):
+    print(f"Hello, {name}!")
+
+# Call the decorated function
+greet("Alice")
+
+Basic example of Decorator with arguments:
+In this example, decorator prints a message before & after a function is called
+# Define a decorator that accepts arguments
+def repeat(num_times):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            for _ in range(num_times):
+                func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+# Apply the decorator with arguments
+@repeat(3)
+def greet(name):
+    print(f"Hello, {name}!")
+
+# Call the decorated function
+greet("Alice")
+
+
+Key Points for above code explanation:
+@repeat(3) is equivalent to greet = repeat(3)(greet).
+repeat(3) returns the decorator function.
+decorator(greet) returns the wrapper function, which replaces greet
+
+Common Use Cases for Decorators:
+Logging: Track function calls and their arguments.
+Access Control: Restrict access to certain functions.
+Memoization: Cache results of expensive function calls.
+Validation: Validate input arguments before execution.
+
+Why are tuples used? What is the difference b/w tuple and list?
+Answer. A tuple in Python is an immutable, ordered collection of elements. It is similar to a list but cannot be modified after creation, meaning you can't add, remove, or change its elements.
+
+Which are the different access specifiers in python that you are aware of?
+Answer. I should structure the answer by first stating that Python doesn't have traditional access specifiers like in Java or C++, then explain the conventions used (single and double underscores), mention name mangling, and perhaps touch on the use of properties for encapsulation. Also, highlight the philosophy behind Python's approach to access control.
+
+
+1. Public Members: Public attributes and methods can be accessed directly from anywhere.
+No prefix.
+Accessible from anywhere.
+
+class MyClass:
+    def __init__(self):
+        self.public_var = 10  # Public variable
+
+    def public_method(self):
+        return "This is a public method"
+
+# Calling public attributes and methods
+obj = MyClass()
+print(obj.public_var)          # Output: 10
+print(obj.public_method())     # Output: "This is a public method"
+
+
+2. Protected Members Protected members are indicated by a single underscore (_). They can still be accessed directly, but it's a convention to treat them as internal.
+Single underscore prefix (_).
+Conventionally indicates "internal use only," but not enforced.
+class MyClass:
+    def __init__(self):
+        self._protected_var = 20  # Protected variable
+
+    def _protected_method(self):
+        return "This is a protected method"
+
+# Calling protected attributes and methods
+obj = MyClass()
+print(obj._protected_var)          # Output: 20
+print(obj._protected_method())     # Output: "This is a protected method"
+
+
+3. Private Members: Private members are indicated by double underscores (__). Python performs name mangling to make them harder to access directly.
+class MyClass:
+    def __init__(self):
+        self.__private_var = 30  # Private variable
+
+    def __private_method(self):
+        return "This is a private method"
+
+# Calling private attributes and methods (not recommended, but possible)
+obj = MyClass()
+print(obj._MyClass__private_var)          # Output: 30
+print(obj._MyClass__private_method())     # Output: "This is a private method"
+
+4. Properties for Encapsulation: Properties allow controlled access to attributes using @property and @<attribute>.setter.
+class MyClass:
+    def __init__(self):
+        self.__hidden_var = 0  # Private variable
+
+    @property
+    def var(self):
+        return self.__hidden_var  # Read access
+
+    @var.setter
+    def var(self, value):
+        if value >= 0:
+            self.__hidden_var = value  # Controlled write access
+        else:
+            raise ValueError("Value must be non-negative")
+
+# Using properties to access and modify private attributes
+obj = MyClass()
+print(obj.var)  # Output: 0 (default value)
+
+obj.var = 42    # Setting a new value
+print(obj.var)  # Output: 42
+
+# obj.var = -10  # This would raise a ValueError
+
+
+
+Generators
+Answer. Generators in Python are special functions that allow you to generate values on-the-fly and don't store the entire sequence in memory. They use the yield keyword to produce a value and pause the function's execution, resuming from where it left off when the next value is requested.
+Generators return an iterable generator object. To get the actual values you can use a for-loop, using next() or list() method. 
+Generators are like a "pause-and-play" function. Instead of computing all values at once (like a list), they generate one value at a time, wait, and then generate the next value when asked.
+# A simple generator function
+def simple_generator():
+    yield 1
+    yield 2
+    yield 3
+
+# Using the generator
+gen = simple_generator()
+print(next(gen))  # Output: 1
+print(next(gen))  # Output: 2
+print(next(gen))  # Output: 3
+
+Real-World Use Case:
+Generators are great for handling large datasets, like reading a large file line by line without loading the entire file into memory.
+def read_large_file(file_name):
+    with open(file_name, 'r') as file:
+        for line in file:
+            yield line
+
+# Usage
+for line in read_large_file('large_file.txt'):
+    print(line)
+
+
+What is yield?
+The yield keyword in python works like a return with the only difference is that instead of returning a value, it gives back a generator object to the caller.
+
+Here is a simple example of yield. The function testyield() has a yield keyword  
+When the function is called, the output is printed and it gives a generator object instead of the actual value.
+def testyield():
+  yield "Welcome to Guru99 Python Tutorials"
+output = testyield()
+print(output)
+
+//Output: <generator object testyield at 0x00000028265EB9A8>
+
+
+Difference between Normal function v/s Generator function :
+yield preserves the function's state between calls; return does not.
+yield creates a generator object; return returns a single value.
+Generators with yield are memory-efficient for large datasets; return computes everything at once.
+
+How to Read Values from a Generator
+You can read the values from a generator object using a list(), for-loop and using next() method.
+
+def my_generator():
+    yield 10
+    yield 20
+
+# Using next()
+gen = my_generator()
+print(next(gen))  # Output: 10
+print(next(gen))  # Output: 20
+
+# Using a for loop
+gen = my_generator()
+for value in gen:
+    print(value)  # Output: 10, 20, 30
+
+
+Real-World Comparison:
+
+# Real-world example: Using return (inefficient for large data)
+def get_squares(n):
+    results = []
+    for i in range(n):
+        results.append(i * i)
+    return results  # Returns the entire list at once
+
+squares = get_squares(10)  # Small example for demonstration
+print("Squares using return:", squares)
+
+# Real-world example: Using yield (memory-efficient)
+def generate_squares(n):
+    for i in range(n):
+        yield i * i  # Yields one value at a time
+
+squares_gen = generate_squares(10)  # Small example for demonstration
+print("Squares using yield:")
+for square in squares_gen:
+    print(square, end=" ")  # Prints squares one by one
+
+
+Generators are one-time use 👍
+Incase of generators they are available for use only once. If you try to use them again, it will be empty.
+In case you want the output to be used again, you will have to make the call to function again.
+For example:
+def my_generator():
+    yield 1
+    yield 2
+
+gen = my_generator()
+print(list(gen))  # Output: [1, 2] (First iteration)
+print(list(gen))  # Output: [] (Generator is exhausted)
+
+
+When to Use Yield Instead of Return in Python 👍
+Use yield when:
+Memory Efficiency: You’re working with large datasets and don’t want to load everything into memory at once.
+Lazy Evaluation: You want to generate values on-the-fly and only when needed.
+Infinite Sequences: You need to represent an infinite sequence (e.g., a stream of data).
+Use return when:
+You need to compute and return a single result immediately.
+You don’t need to preserve the function’s state between calls.
+
+# Using return (inefficient for large data)
+def get_numbers(n):
+    return list(range(n))  # Stores all numbers in memory
+
+# Using yield (memory-efficient)
+def generate_numbers(n):
+    for i in range(n):
+        yield i  # Yields one number at a time
+
+# Compare memory usage
+import sys
+numbers_return = get_numbers(1000000)
+numbers_yield = generate_numbers(1000000)
+print(sys.getsizeof(numbers_return))  # Large memory usage
+print(sys.getsizeof(numbers_yield))   # Small memory usage (generator object)
+
+
+Summary
+Generators are created using functions with yield.
+Generators are one-time use; once exhausted, they cannot be reused.
+The yield keyword in python works like a return with the only difference is that instead of returning a value, it gives back a generator function to the caller.
+A generator is a special type of iterator that, once used, will not be available again. The values are not stored in memory and are only available when called.
+The values from the generator can be read using for-in, list() and next() method.
+The main difference between yield and return is that yield returns back a generator function to the caller and return gives a single value to the caller.
+Yield does not store any of the values in memory, and the advantage is that it is helpful when the data size is big, as none of the values are stored in memory.
+The performance is better if the yield keyword is used in comparison to return for large data size.
+
+Frozen Sets
+Answer :
+Frozen sets are immutable versions of Python sets.
+They are created using the frozenset() function.
+Like sets, they store unique, unordered elements.
+Unlike sets, they cannot be modified after creation (immutable).
+Key Points:
+Immutable: Cannot add, remove, or modify elements after creation.
+Hashable: Can be used as keys in dictionaries or elements in other sets.
+Unordered: Elements are not stored in any specific order.
+Unique Elements: Duplicates are automatically removed.
+
+
+# Creating a frozen set
+fset = frozenset([1, 2, 3, 4, 2])  # Duplicates are removed
+print("Frozen Set:", fset)  # Output: frozenset({1, 2, 3, 4})
+
+# Frozen sets are immutable
+try:
+    fset.add(5)  # This will raise an AttributeError
+except AttributeError as e:
+    print("Error:", e)  # Output: Error: 'frozenset' object has no attribute 'add'
+
+# Frozen sets can be used as dictionary keys
+dict_with_frozenset = {fset: "Frozen Set Example"}
+print("Dictionary with Frozen Set Key:", dict_with_frozenset)  # Output: {frozenset({1, 2, 3, 4}): 'Frozen Set Example'}
+
+# Frozen sets can be elements of other sets
+set_of_frozensets = {frozenset([1, 2]), frozenset([3, 4])}
+print("Set of Frozen Sets:", set_of_frozensets)  # Output: {frozenset({3, 4}), frozenset({1, 2})}
+
+# Operations on frozen sets (similar to regular sets)
+fset1 = frozenset([1, 2, 3])
+fset2 = frozenset([3, 4, 5])
+print("Union:", fset1.union(fset2))  # Output: frozenset({1, 2, 3, 4, 5})
+print("Intersection:", fset1.intersection(fset2))  # Output: frozenset({3})
+print("Difference:", fset1.difference(fset2))  # Output: frozenset({1, 2})
+
+
+Sort a list without using inbuilt function
+def insertion_sort(arr):
+    for i in range(1, len(arr)):  # Start from the second element
+        number_to_insert = arr[i]  # Element to be inserted
+        j = i - 1  # Start comparing with the previous element
+        while j >= 0 and arr[j] > number_to_insert:
+            # Shift elements to the right
+            arr[j + 1] = arr[j]
+            j -= 1
+        # Insert the number in its correct position
+        arr[j + 1] = number_to_insert
+    return arr
+
+# Example usage:
+print(insertion_sort([-6, 20, 8, 4, -2]))  # Output: [-6, -2, 4, 8, 20]
+
+
+Sets, Dictionary, Lists, Tuples - Difference & Use-Case 
+Answer: Python provides several built-in data structures to store collections of data, and each has its own properties and ideal use cases. Here’s a simple breakdown:
+1. List 📝 : Ordered, mutable (changeable), allows duplicates
+What They Are: Ordered collections that can contain duplicate elements.
+Mutability: Mutable (you can change, add, or remove elements).
+Use Cases: When you need a collection where the order matters (e.g., a sequence of tasks) and you might need to update the elements.
+2. Tuple 🔒 : Ordered, immutable (cannot be changed), allows duplicates
+What They Are: Ordered collections, similar to lists, but immutable.
+Mutability: Immutable (once created, elements cannot be changed).
+Use Cases: When you have a fixed collection of items (e.g., coordinates, RGB color values) that should not change, or as keys in dictionaries (since keys must be immutable).
+3. Dictionary 📖 : Key-value pairs, mutable, unordered, keys must be unique
+What They Are: Collections of key-value pairs.
+Mutability: Mutable (you can add, modify, or remove key-value pairs).
+Use Cases: When you need to associate unique keys to values for fast lookup (e.g., storing a user's profile where keys are field names like "name" and "age").
+4. Set 🚀 : Unordered, unique elements, mutable
+What They Are: Unordered collections of unique elements.
+Mutability: Mutable (you can add or remove elements) unless you use a frozenset, which is immutable.
+Use Cases: When you need to ensure that each element appears only once (e.g., removing duplicates) or when you need to perform set operations like union, intersection, and difference.
+
+Code with Output and Explanations 👍
+# 1. List Example: Ordered, Mutable, Allows Duplicates
+
+# Creating a list
+my_list = [1, 2, 3, 'apple', True]
+
+# Accessing elements
+print(my_list[0])  # Output: 1 (indexing starts at 0)
+print(my_list[-1]) # Output: True (negative indexing)
+
+# Modifying
+my_list[1] = 'banana'  # Change element at index 1
+
+# Adding elements
+my_list.append(4)       # Add to end
+my_list.insert(1, 10)   # Insert at specific position
+
+# Removing elements
+my_list.remove('apple') # Remove by value
+popped = my_list.pop()  # Remove and return last item
+
+# Other operations
+length = len(my_list)   # Get length
+sliced = my_list[1:3]   # Slicing [start:end]
+combined = my_list + [5, 6]  # Concatenation
+
+// How would you reverse a list in-place?
+my_list.reverse()  # OR my_list[::-1] for a new reversed list
+# --------------------------------------
+
+# 2. Tuple Example: Ordered, Immutable
+
+# Creating a tuple
+my_tuple = (1, 2, 3, 'apple')
+
+# Accessing (same as lists)
+print(my_tuple[0])  # Output: 1
+
+# Tuples are immutable - this would ERROR:
+# my_tuple[1] = 5  
+
+# Unpacking
+a, b, c, d = my_tuple  # a=1, b=2, etc.
+
+# Single-element tuple needs a comma
+single = (5,)  # Not (5) which is just integer 5
+
+# --------------------------------------
+
+# 3. Dictionary Example: Key-Value Pairs
+# Creating a dictionary
+my_dict = {'name': 'Alice', 'age': 25, 1: 'one'}
+
+# Accessing
+print(my_dict['name'])  # Output: Alice
+print(my_dict.get('age'))  # Safer access (returns None if key doesn't exist)
+
+# Modifying/adding
+my_dict['age'] = 26      # Modify
+my_dict['city'] = 'NYC'  # Add new key
+
+# Removing
+del my_dict[1]          # Remove key 1
+age = my_dict.pop('age') # Remove and return value
+
+# Common methods
+keys = my_dict.keys()    # View of keys
+values = my_dict.values() # View of values
+items = my_dict.items()  # View of key-value pairs
+
+dict1.update(dict2)  # Modifies dict1
+# --------------------------------------
+
+# 4. Set Example: Unordered, Unique Elements
+# Creating a set
+my_set = {1, 2, 3, 3}  # Duplicates removed: {1, 2, 3}
+
+# Adding/removing
+my_set.add(4)
+my_set.remove(2)  # Raises error if not found
+my_set.discard(2) # No error if not found
+
+# Set operations
+other_set = {3, 4, 5}
+print(my_set.union(other_set))        # {1, 3, 4, 5}
+print(my_set.intersection(other_set)) # {3}
+print(my_set.difference(other_set))   # {1}
+
+🔍 Quick Summary 
+Feature
+List 📝
+Tuple 🔒
+Dictionary 📖
+Set 🚀
+Ordered?
+✅ Yes
+✅ Yes
+❌ No (Python 3.6+ keeps insertion order, but logically unordered)
+❌ No
+Mutable?
+✅ Yes
+❌ No
+✅ Yes
+✅ Yes
+Allows Duplicates?
+✅ Yes
+✅ Yes
+❌ No (Keys must be unique)
+❌ No
+Use Case?
+Storing ordered data that changes
+Fixed data like coordinates
+Fast lookups (key-value pairs)
+Unique items, fast membership checks
+
+Final Thoughts 👍
+Use a list when order matters and you need to modify elements frequently.
+Use a tuple when the data should remain fixed and unchangeable.
+Use a dictionary when you need key-value mapping and fast lookups.
+Use a set when you need uniqueness and quick existence checks.
+
+Unit Testing in Python
+Answer: Unit testing is a method of testing individual units (functions, methods, or classes) of a program to ensure they work correctly. In Python, the built-in unittest module is commonly used for this purpose.
+Python's built-in unittest module provides a testing framework. Let's create a simple test file:
+Example 1: Basic Unit Test for a Function
+import unittest
+
+def add(a, b):
+    return a + b
+
+class TestMathOperations(unittest.TestCase):
+    def test_add_positive_numbers(self):
+        self.assertEqual(add(2, 3), 5)
+    
+    def test_add_negative_numbers(self):
+        self.assertEqual(add(-1, -1), -2)
+    
+    def test_add_mixed_numbers(self):
+        self.assertEqual(add(5, -3), 2)
+
+if __name__ == '__main__':
+    unittest.main()
+
+
+Common unittest Assertions
+unittest provides various assertion methods to check expected outputs:
+Assertion Method
+Description
+assertEqual(a, b)
+Checks if a == b
+assertNotEqual(a, b)
+Checks if a != b
+assertTrue(x)
+Checks if x is True
+assertFalse(x)
+Checks if x is False
+assertIn(a, b)
+Checks if a is in b
+assertNotIn(a, b)
+Checks if a is not in b
+assertRaises(Exception, func, *args)
+Checks if func(*args) raises Exception
+
+
+
+Example 2: Testing for Exceptions
+Let’s test a function that raises an exception when dividing by zero.
+import unittest
+def divide(a, b):
+    if b == 0:
+        raise ValueError("Cannot divide by zero")
+    return a / b
+
+
+class TestCalculator(unittest.TestCase):
+    def test_divide(self):
+        self.assertEqual(divide(10, 2), 5)  # Normal division
+        self.assertRaises(ValueError, divide, 10, 0)  # Exception test
+
+if __name__ == "__main__":
+    unittest.main()
+
+
+
+OOP
+Answer: A class is a blueprint for creating objects. Objects are instances of classes that contain both data (attributes) and behavior (methods).
+
+Key Concepts of OOP 
+1️.Classes and Objects
+A class is a blueprint for creating objects. An object is an instance of a class.
+2. Encapsulation
+Encapsulation binds data (variables) and methods (functions) together in a single unit (class). It also restricts direct access to some data.
+3. Inheritance
+Inheritance allows a class to derive properties and behaviors from another class, promoting code reuse.
+4. Polymorphism
+Polymorphism allows different classes to use the same method name but implement it differently.
+5.Abstraction
+Abstraction hides the internal details of an object and only exposes the relevant functionalities.
+
+Summary Table
+Concept
+Description
+Class & Object
+A class is a blueprint; an object is an instance.
+Encapsulation
+Protects data using private attributes.
+Inheritance
+One class inherits from another (code reuse).
+Polymorphism
+Same method, different behavior.
+Abstraction
+Hides implementation details, exposing only essential features.
+
+
+Code Example: Basic Class
+class Dog:
+    # Class attribute (shared by all instances)
+    species = "Canis familiaris"
+
+    # Instance attributes (unique to each instance)
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+    # Instance method
+    def description(self):
+        return f"{self.name} is {self.age} years old"
+
+    # Another instance method
+    def speak(self, sound):
+        return f"{self.name} says {sound}"
+
+# Creating objects
+dog1 = Dog("Buddy", 4)
+dog2 = Dog("Milo", 2)
+
+# Accessing attributes and methods
+print(dog1.name)  # Output: Buddy
+print(dog2.description())  # Output: Milo is 2 years old
+print(dog1.speak("Woof!"))  # Output: Buddy says Woof!
+print(f"All dogs are {Dog.species}")  # Accessing class attribute
+
+
+
+2. Inheritance (Code Reuse)
+Inheritance allows a class to inherit attributes and methods from another class.
+# Parent class
+class Animal:
+    def __init__(self, name):
+        self.name = name
+
+    def speak(self):
+        return "This animal makes a sound"
+
+# Child class (inherits Animal)
+class Dog(Animal):
+    def speak(self):  # Method Overriding
+        return "Woof! Woof!"
+
+# Create objects
+animal = Animal("General Animal")
+dog = Dog("Buddy")
+
+print(animal.speak())  # Output: This animal makes a sound
+print(dog.speak())     # Output: Woof! Woof!
+
+
+
+3. Encapsulation ((Data Hiding)
+Explanation:
+Encapsulation restricts access to methods and variables to prevent accidental modification.
+class BankAccount:
+    def __init__(self, account_holder, balance=0):
+        self._account_holder = account_holder  # Protected
+        self.__balance = balance  # Private (name mangling)
+
+    def deposit(self, amount):
+        self.__balance += amount
+        print(f"Deposited {amount}. New balance: {self.__balance}")
+
+    def withdraw(self, amount):
+        if amount <= self.__balance:
+            self.__balance -= amount
+            print(f"Withdrew {amount}. New balance: {self.__balance}")
+        else:
+            print("Insufficient funds")
+
+    def get_balance(self):
+        return self.__balance
+
+account = BankAccount("Alice", 1000)
+account.deposit(500)  # Output: Deposited 500. New balance: 1500
+account.withdraw(200)  # Output: Withdrew 200. New balance: 1300
+# print(account.__balance)  # Error! AttributeError
+print(account.get_balance())  # Output: 1300
+
+
+4️. Polymorphism (Same Method, Different Behavior)
+Polymorphism allows different classes to implement the same method differently.
+
+class Bird:
+    def fly(self):
+        print("Some birds can fly")
+
+class Sparrow(Bird):
+    def fly(self):
+        print("Sparrow flies fast")
+
+class Penguin(Bird):
+    def fly(self):
+        print("Penguins can't fly")
+
+def bird_flying_test(bird):
+    bird.fly()
+
+# Polymorphic behavior
+bird_flying_test(Bird())  # Output: Some birds can fly
+bird_flying_test(Sparrow())  # Output: Sparrow flies fast
+bird_flying_test(Penguin())  # Output: Penguins can't fly
+
+
+
+4️. Abstraction (Hiding Details)
+Abstraction is achieved using abstract classes (using abc module).
+from abc import ABC, abstractmethod
+
+class Vehicle(ABC):  # Abstract class
+    @abstractmethod
+    def fuel_type(self):  # Abstract method
+        pass
+
+class ElectricCar(Vehicle):
+    def fuel_type(self):
+        return "Electric"
+
+class PetrolCar(Vehicle):
+    def fuel_type(self):
+        return "Petrol"
+
+# Create objects
+tesla = ElectricCar()
+honda = PetrolCar()
+
+print(tesla.fuel_type())  # Output: Electric
+print(honda.fuel_type())  # Output: Petrol
+
+
+
+5. Magic (Dunder) Methods
+Explanation:
+Special methods that start and end with double underscores
+class Book:
+    def __init__(self, title, author, pages):
+        self.title = title
+        self.author = author
+        self.pages = pages
+
+    # String representation
+    def __str__(self):
+        return f"{self.title} by {self.author}"
+
+    # Length of book
+    def __len__(self):
+        return self.pages
+
+    # Delete book
+    def __del__(self):
+        print("A book object has been deleted")
+
+book = Book("Python Crash Course", "Eric Matthes", 544)
+print(book)  # Output: Python Crash Course by Eric Matthes
+print(len(book))  # Output: 544
+del book  # Output: A book object has been deleted
+
+
+
+Practice Problem
+Problem: Create a Rectangle class with methods to calculate area and perimeter, and compare rectangles based on area.
+
+class Rectangle:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
+    def area(self):
+        return self.width * self.height
+
+    def perimeter(self):
+        return 2 * (self.width + self.height)
+
+    def __eq__(self, other):
+        return self.area() == other.area()
+
+    def __lt__(self, other):
+        return self.area() < other.area()
+
+    def __str__(self):
+        return f"Rectangle(width={self.width}, height={self.height})"
+
+# Test cases
+rect1 = Rectangle(4, 5)
+rect2 = Rectangle(2, 10)
+
+print(rect1)  # Output: Rectangle(width=4, height=5)
+print(f"Area: {rect1.area()}")  # Output: Area: 20
+print(f"Perimeter: {rect1.perimeter()}")  # Output: Perimeter: 18
+print(rect1 == rect2)  # Output: True (both have area 20)
+print(rect1 < Rectangle(5, 5))  # Output: True (20 < 25)
+
+
+Common Interview Questions
+What is the difference between a class and an object?
+Class: Blueprint/template
+Object: Instance of a class
+Explain self in Python
+Reference to the current instance of the class
+First parameter of instance methods (by convention)
+Difference between __str__ and __repr__?
+__str__: Human-readable representation (print() uses this)
+__repr__: Unambiguous representation (used by developers)
+What is method overriding?
+When a child class provides a different implementation of a method already defined in its parent class
+How is multiple inheritance handled in Python?
+Uses Method Resolution Order (MRO) to determine which method to call
+Can lead to the "diamond problem" if not designed carefully
+
+Best Practices:
+Use composition over inheritance when possible
+Follow the Single Responsibility Principle
+Use properties (@property) instead of direct attribute access when needed
+Keep inheritance hierarchies shallow
+
+
+ Multiple Inheritance, Single Responsibility Principle, Properties
+Answer: When a class inherits from more than one parent class. The Method Resolution Order (MRO) determines the search order for attributes
+
+"""
+Multiple Inheritance Reference:
+
+- A class can inherit from multiple parents.
+- Python determines method calls using MRO (Method Resolution Order).
+- Use super() to call the next method in the MRO.
+- To explicitly call a method from a parent further down the MRO,
+  use super(ParentClass, self).method().
+
+Expected Output:
+Father
+Mother
+Child
+[<class '__main__.Child'>, <class '__main__.Father'>, <class '__main__.Mother'>, <class 'object'>]
+"""
+
+class Father:
+    def method(self):
+        print("Father")
+
+class Mother:
+    def method(self):
+        print("Mother")
+
+class Child(Father, Mother):
+    def method(self):
+        # First super() call: Follows MRO and calls Father's method.
+        super().method()
+        # Explicitly call the next method after Father in MRO, which is Mother's.
+        super(Father, self).method()
+        print("Child")
+
+# Create an instance of Child and call the method.
+child = Child()
+child.method()
+
+# Display the Method Resolution Order (MRO)
+print(Child.mro())
+
+
+
+2. Single Responsibility Principle (SRP)
+A class should have only one reason to change (i.e., one responsibility)
+This makes code more maintainable and less fragile.
+Code Example: SRP Violation vs. Compliance
+# ❌ Violates SRP - Manages user AND sends email
+class UserManagerBad:
+    def __init__(self, user):
+        self.user = user
+    
+    def change_username(self, new_name):
+        self.user = new_name
+    
+    def send_email(self, message):
+        print(f"Email to {self.user}: {message}")
+
+# ✅ Follows SRP - Separates concerns
+class UserManager:
+    def __init__(self, user):
+        self.user = user
+    
+    def change_username(self, new_name):
+        self.user = new_name
+
+class EmailService:
+    @staticmethod
+    def send_email(user, message):
+        print(f"Email to {user}: {message}")
+
+# Usage
+user_manager = UserManager("Alice")
+email_service = EmailService()
+
+user_manager.change_username("Bob")
+email_service.send_email(user_manager.user, "Welcome!")
+
+
+Key Points:
+Each class should have only one job
+Easier to test and maintain
+Reduces side effects when making changes
+Common violations:
+Classes that both manage data AND handle UI
+Classes that process data AND save to database
+
+3. Properties (@property)
+Explanation:
+Properties allow controlled access to instance attributes, enabling getter/setter functionality while maintaining clean syntax.
+Code Example: Property Implementation
+class Temperature:
+    def __init__(self, celsius=0):
+        self._celsius = celsius  # Protected attribute
+    
+    @property
+    def celsius(self):
+        """Getter for celsius"""
+        return self._celsius
+    
+    @celsius.setter
+    def celsius(self, value):
+        """Setter for celsius with validation"""
+        if value < -273.15:
+            raise ValueError("Temperature below absolute zero!")
+        self._celsius = value
+    
+    @property
+    def fahrenheit(self):
+        """Computed property - no setter"""
+        return (self._celsius * 9/5) + 32
+
+# Usage
+temp = Temperature(25)
+print(temp.celsius)      # Output: 25 (getter)
+print(temp.fahrenheit)   # Output: 77.0 (computed property)
+
+temp.celsius = 30       # Uses setter
+print(temp.fahrenheit)   # Output: 86.0
+
+try:
+    temp.celsius = -300  # Triggers ValueError
+except ValueError as e:
+    print(f"Error: {e}")  # Output: Error: Temperature below absolute zero!
+
+
+Key Points:
+@property: Declares getter method
+@x.setter: Declares setter method
+@x.deleter: Declares delete method
+Practice Problem
+Create a BankAccount class that:
+Uses properties for balance (read-only)
+Has a transaction log (SRP compliant)
+Inherits from a base Account class
+
+class Account:
+    """Base account class"""
+    def __init__(self, account_number):
+        self.account_number = account_number
+
+class TransactionLogger:
+    """Handles transaction logging (SRP)"""
+    @staticmethod
+    def log(transaction_type, amount):
+        print(f"Logged: {transaction_type} of ${amount:.2f}")
+
+class BankAccount(Account):
+    """Inherits from Account, uses TransactionLogger"""
+    def __init__(self, account_number, initial_balance=0):
+        super().__init__(account_number)
+        self._balance = initial_balance
+        self._logger = TransactionLogger()
+    
+    @property
+    def balance(self):
+        return self._balance
+    
+    def deposit(self, amount):
+        self._balance += amount
+        self._logger.log("Deposit", amount)
+    
+    def withdraw(self, amount):
+        if amount > self._balance:
+            raise ValueError("Insufficient funds")
+        self._balance -= amount
+        self._logger.log("Withdrawal", amount)
+
+# Test
+account = BankAccount("123456", 1000)
+print(f"Initial balance: ${account.balance:.2f}")  # Output: Initial balance: $1000.00
+
+account.deposit(500)  # Output: Logged: Deposit of $500.00
+account.withdraw(200) # Output: Logged: Withdrawal of $200.00
+
+print(f"Final balance: ${account.balance:.2f}")  # Output: Final balance: $1300.00
+
+
+ Compiled language / interpreted language?
+Answer: Python can be considered both compiled and interpreted, but in different stages of its execution process.
+Compilation: When you write Python code and run it, the Python interpreter first compiles your source code (.py files) into an intermediate form called bytecode (.pyc files). This bytecode is a lower-level representation of your code, but it is still not directly machine code. It’s something that the Python Virtual Machine (PVM) can understand and execute.
+Interpretation: After Python code is compiled into bytecode, it is executed by the Python Virtual Machine (PVM), which is an interpreter. The PVM reads the bytecode and executes it line-by-line at runtime, which is why Python is considered an interpreted language in practice.
+Comparison with Other Languages
+Language
+Compilation Type
+C/C++
+Fully compiled to machine code
+Java
+Compiled to bytecode (JVM)
+Python
+Compiled to bytecode → Interpreted
+JavaScript
+JIT-compiled at runtime
+
+
+
+
+ Dynamically Typed Language
+Answer: Programming Languages can be divided into the following two types.
+Statically typed languages: In this type of language, the data type of a variable is known at the compile time which means the programmer has to specify the data type of a variable at the time of its declaration. Examples are C, C++, Java and C#
+Dynamically typed languages: These are the languages that do not require any pre-defined data type for any variable as it is interpreted at runtime by the machine itself. In these languages, interpreters assign the data type to a variable at runtime depending on its value. Examples are Python and JavaScript
+Statically typed languages are typically faster than dynamically typed Languages and Dynamically typed languages are typically easy to code. Python is a Dynamically Typed language
+
+
+ Built-in Datatypes
+Answer: Python provides several built-in data types, categorized into:
+Category
+Data Types
+Properties
+Numeric
+int, float, complex
+Stores numbers
+Sequence
+list, tuple, range, str
+Ordered collections
+Set
+set, frozenset
+Unordered, unique elements
+Mapping
+dict
+Key-value pairs
+Boolean
+bool
+True / False values
+Binary
+bytes, bytearray, memoryview
+Handles binary data
+
+
+Interview Questions & Answers
+What's the difference between lists and tuples?
+Lists are mutable, tuples are immutable
+Tuples are faster and can be dictionary keys
+When would you use a set?
+When you need unique elements
+For fast membership testing (x in set is O(1))
+How are dictionaries implemented?
+As hash tables (O(1) average case lookup)
+What's an immutable data type in Python?
+int, float, str, tuple, frozenset, bytes
+
+
+ Mutable & Immutable data type
+Answer: Mutable data types can be edited i.e., they can change at runtime. Eg – List, Dictionary, etc. Immutable data types can not be edited i.e., they can not change at runtime. Eg – String, Tuple, etc.
+Immutable Data Types
+Cannot be changed after creation. Any "modification" creates a new object.
+# Integers
+x = 10
+print(id(x))  # Memory address
+x += 1        # Creates new object
+print(id(x))  # New address
+
+# Strings
+s = "hello"
+print(id(s))
+s += " world"  # New string object
+print(id(s))
+
+# Tuples
+t = (1, 2, 3)
+# t[0] = 5    # TypeError: 'tuple' object does not support item assignment
+
+Mutable Data Types
+Can be modified after creation without creating a new object.
+
+# Lists
+lst = [1, 2, 3]
+print(id(lst))  
+lst.append(4)    # Same object
+print(id(lst))   # Same address
+
+# Dictionaries
+d = {'a': 1}
+d['b'] = 2       # Modified in-place
+
+# Sets
+s = {1, 2}
+s.add(3)         # Modified original
+
+Common Interview Questions
+👉 How to make a shallow copy vs deep copy?
+import copy
+
+lst = [1, [2, 3]]
+shallow = lst.copy()        # or list(lst)
+deep = copy.deepcopy(lst)
+
+lst[1].append(4)
+print(shallow)  # [1, [2, 3, 4]]
+print(deep)     # [1, [2, 3]]
+
+👉 Why are immutable types important in Python?
+Performance Optimization: Strings & numbers are cached in memory for reuse.
+Hashing & Dictionary Keys: Only immutable types (int, str, tuple) can be used as dict keys.
+Thread Safety: Immutable objects prevent accidental modification in multi-threading.
+Cheat Sheet
+Characteristic
+Mutable Types
+Immutable Types
+Modifiable
+Yes
+No
+Dictionary Keys
+No
+Yes
+Thread Safety
+Requires locks
+Safe
+Memory Efficiency
+Better for changes
+May create many objects
+Example Methods
+append(), pop()
+None (can't modify)
+
+
+
+
+
+How are arguments passed by value or by reference in Python?
+Answer: Python’s argument-passing model is neither “Pass by Value” nor “Pass by Reference” but it is “Pass by Object Reference”. 
+Depending on the type of object you pass in the function, the function behaves differently. Immutable objects show “pass by value” whereas mutable objects show “pass by reference”.
+Caller's Scope       Function Scope
+-------------       --------------
+num = 5             x = num (both reference same 5)
+                    x += 10 → new object 15 (num still points to 5)
+
+my_list = [1,2,3]   lst = my_list (same object)
+                    lst.append(4) → modifies shared object
+
+
+Class Variable & Methods
+1. Class Variables
+What they are: Variables shared by all instances of a class
+Key points:
+Defined directly under the class
+Accessed via ClassName.variable or instance.variable
+Changing through class affects all instances
+Changing through instance creates instance-specific version
+
+class Bank:
+    interest_rate = 0.05  # Class variable shared by all accounts
+
+    @classmethod
+    def update_interest(cls, new_rate):
+        cls.interest_rate = new_rate  # Updates for ALL instances
+
+# Usage
+account1 = Bank()
+account2 = Bank()
+
+print(account1.interest_rate)  # 0.05 (original)
+print(account2.interest_rate)  # 0.05
+
+Bank.update_interest(0.07)     # Updates ALL accounts
+
+print(account1.interest_rate)  # Now 0.07
+print(account2.interest_rate)  # Now 0.07
+
+2. Class Methods
+What they are: Methods bound to the class rather than instances
+Key points:
+Decorated with @classmethod
+First parameter is cls (the class itself)
+Used for factory methods and class-level operations
+3. Static Methods
+What they are: Utility functions inside class namespace
+Key points:
+Decorated with @staticmethod
+No self or cls parameter
+Used for functions logically related to the class
+
+Practical Example: Pizza Shop
+class Pizza:
+    # Class variable - shared by all pizzas
+    pizza_types = ["Margherita", "Pepperoni", "Vegetarian"]
+    
+    def __init__(self, size, toppings):
+        # Instance variables - unique to each pizza
+        self.size = size
+        self.toppings = toppings
+    
+    @classmethod
+    def margherita(cls, size):
+        """Factory method to create a Margherita pizza"""
+        return cls(size, ["tomato", "mozzarella"])
+    
+    @staticmethod
+    def calculate_area(diameter):
+        """Utility method to calculate pizza area"""
+        return 3.14 * (diameter/2)**2
+
+# Using all features together
+print("Available types:", Pizza.pizza_types)  # Class variable
+
+large_margherita = Pizza.margherita("large")  # Class method
+print(f"Large Margherita toppings: {large_margherita.toppings}")
+
+area = Pizza.calculate_area(12)  # Static method
+print(f"12-inch pizza area: {area:.2f} cm²")
+
+Why This Example Works
+Class Variable (pizza_types):
+Shared catalog of all pizza types
+Accessible without creating instances
+Class Method (margherita):
+Alternate constructor for specific pizza type
+Uses cls to create new instances
+Static Method (calculate_area):
+Pure math function related to pizzas
+Doesn't need instance or class access
+Instance Attributes (size, toppings):
+Unique to each pizza object
+Set during initialization
+
+Module & Package
+Answer: A module is a single Python file with reusable code, while a package is a directory containing multiple modules and an __init__.py file. Packages help organize larger projects, like how folders organize files on your computer.
+Module: A single Python file containing reusable code (functions/classes).
+Package: A folder grouping related modules, marked by an __init__.py file.
+Complete Example in One Code Snippet
+# ========== MODULE ==========  
+# File: calculator.py  
+"""Handles basic math operations"""  
+
+def add(a, b):  
+    return a + b  
+
+def subtract(a, b):  
+    return a - b  
+
+# ========== PACKAGE ==========  
+# Folder structure:  
+# math_package/  
+# ├── __init__.py  
+# ├── geometry.py  
+# └── algebra.py  
+
+# File: math_package/geometry.py  
+def area_square(side):  
+    return side ** 2  
+
+# File: math_package/algebra.py  
+def solve_linear(a, b):  
+    return -b / a  
+
+# ========== USAGE ==========  
+# Using the module  
+import calculator  
+print(calculator.add(5, 3))  # 8  
+
+# Using the package  
+from math_package.geometry import area_square  
+print(area_square(4))  # 16 
+
+Common Interview Q&A 👍
+Q: Why use __init__.py?
+A: It tells Python the folder is a package. You can use it to control what gets imported when someone does from package import *.
+Q: How does import module differ from from package import module?
+A: The first imports a standalone module, the second imports from a package structure.
+Q: How to share variables across modules?
+A: Create a shared module (e.g., config.py) and import it where needed.
+
+Stack vs Queue
+Core Concept
+Stack: Like a stack of plates - Last In First Out (LIFO)
+Queue: Like a ticket line - First In First Out (FIFO)
+# Stack Operations
+stack = []
+stack.append(1)  # Push
+stack.append(2)
+top = stack[-1]  # Peek (returns 2)
+last = stack.pop()  # Pop (returns 2)
+
+# Queue Operations
+from collections import deque
+queue = deque()
+queue.append(1)  # Enqueue
+queue.append(2)
+front = queue[0]  # Peek (returns 1)
+first = queue.popleft()  # Dequeue (returns 1)
+
+Memory Analogy
+Stack: Vertical memory allocation (like stacked books)
+Queue: Horizontal memory allocation (like people in line)
+Interview Q&A
+Q: How would you implement a queue using stacks?
+
+class QueueUsingStacks:
+    def __init__(self):
+        self.in_stack = []  # For enqueue operations
+        self.out_stack = []  # For dequeue operations
+
+    def enqueue(self, x):
+        """Add to queue (normal stack push)"""
+        self.in_stack.append(x)
+
+    def dequeue(self):
+        """Remove from queue (requires transferring elements)"""
+        if not self.out_stack:  # If out_stack is empty
+            # Move all elements from in_stack to out_stack (reversing order)
+            while self.in_stack:
+                self.out_stack.append(self.in_stack.pop())
+        return self.out_stack.pop()  # Now pop from out_stack
+
+
+Array vs Linked List
+Answer: Arrays store elements in a single memory block, while linked lists chain separate nodes via pointers. Arrays allow instant access but fixed size, while linked lists enable flexible insertions but require sequential traversal.
+# ===== ARRAY =====
+arr = [10, 20, 30]  # Memory: |10|20|30|
+print(arr[1])       # Instantly access 20 (O(1))
+
+# ===== LINKED LIST =====
+class Node:
+    def __init__(self, val):
+        self.val = val
+        self.next = None
+
+# Manually linking nodes (10 -> 20 -> 30)
+head = Node(10)
+head.next = Node(20)
+head.next.next = Node(30)
+
+# Access requires traversal (O(n))
+current = head
+while current:
+    if current.val == 20:
+        print("Found:", current.val)  # Prints when reaches 20
+    current = current.next
+
+# ===== KEY DIFFERENCES =====
+# Arrays: Fast access, slow inserts, fixed size
+# Linked Lists: Slow access, fast inserts, dynamic size
+
+# ===== PRACTICAL EXAMPLE =====
+# Array for storing fixed game levels
+levels = ["forest", "cave", "castle"]
+
+# Linked List for player inventory (frequent changes)
+class Inventory:
+    def __init__(self):
+        self.head = None
+
+    def add_item(self, item):
+        new_node = Node(item)
+        new_node.next = self.head
+        self.head = new_node
+
+player_inventory = Inventory()
+player_inventory.add_item("sword")
+player_inventory.add_item("shield")
+
+When to Use Each
+Arrays: Best when you need frequent random access (e.g., game levels, image pixels)
+Linked Lists: Best for frequent insertions/deletions (e.g., browser history, undo operations)
+Real-World Analogy
+Array: A bookshelf where you can directly grab any book
+Linked List: A treasure hunt where each clue points to the next
+
+Q. How to find the middle of a linked list?
+def find_middle(head):
+    slow = head
+    fast = head
+    while fast and fast.next:
+        slow = slow.next          # Moves 1 step
+        fast = fast.next.next     # Moves 2 steps
+    return slow.data              # Slow points to middle
+
+Why it works: The fast pointer reaches the end while the slow pointer covers half the distance.
+
+
+Multithreading
+Answer:  Python supports multithreading but with a key limitation due to the Global Interpreter Lock (GIL). Here's what you need to know:
+Only one thread executes Python bytecode at a time, even on multi-core CPUs
+I/O-bound tasks (network requests, file ops) can benefit from threading
+CPU-bound tasks (math, data processing) won't speed up with threads
+Here's everything in one clear code example with explanations:
+import threading
+import time
+from multiprocessing import Pool
+
+# ===== I/O-BOUND TASK (Good for threads) =====
+def download_file(url):
+    print(f"Downloading {url}...")
+    time.sleep(2)  # Simulate network delay
+    print(f"Finished {url}")
+
+# ===== CPU-BOUND TASK (Bad for threads) ===== 
+def calc_sum(_):  # Accept dummy argument for map
+    print('Started calc_sum')
+    result = sum(range(10**8))  # CPU-bound work
+    print('Finished calc_sum')
+    return result
+
+# ===== TESTING THREADS =====
+print("=== I/O-Bound Thread Test ===")
+start = time.time()
+
+# Create 2 threads for I/O work
+thread1 = threading.Thread(target=download_file, args=("file1.txt",))
+thread2 = threading.Thread(target=download_file, args=("file2.txt",))
+
+thread1.start()
+thread2.start()
+thread1.join()
+thread2.join()
+
+print(f"Threaded I/O took {time.time() - start:.2f} sec\n")  # ~2 sec (not 4)
+
+# ===== THREAD LIMITATION =====
+print("=== CPU-Bound Thread Test ===")
+start = time.time()
+
+# Try using threads for CPU work
+threads = []
+for i in range(2):
+    t = threading.Thread(target=calculate_sum, args=(10**7,))
+    threads.append(t)
+    t.start()
+
+for t in threads:
+    t.join()
+
+print(f"Threaded CPU took {time.time() - start:.2f} sec\n")  # Slower than sequential!
+
+# ===== BETTER FOR CPU WORK =====
+print("=== Multiprocessing Test ===")
+start = time.time()
+
+if __name__ == '__main__':  # Required for Windows/multiprocessing
+    with Pool(2) as p:
+        results = p.map(calc_sum, range(2))  # Don't call the function!
+
+print(f"Multiprocessing took {time.time() - start:.2f} sec")  # Actually faster
+
+
+The output will clearly show:
+Threads speeding up I/O tasks (2 sec total for two 2-sec downloads)
+Threads failing to speed up CPU tasks
+Multiprocessing successfully parallelizing CPU work
+
+Key Takeaways
+I/O operations = "Waiting tasks" → Great for threading
+CPU operations = "Active computing" → Requires multiprocessing
+GIL is like traffic police directing CPU access
+Technical Truth About I/O and CPU
+I/O-bound operations (network/files):
+Use CPU briefly to start the operation
+Then release the GIL while waiting for results
+Other threads can use CPU during wait
+CPU-bound operations (calculations):
+Need continuous CPU access
+Never release the GIL voluntarily
+
+Threads work well for:
+Network requests (requests.get())
+File operations
+Any task with waiting periods
+Threads don't help for:
+Math calculations
+Data processing
+Any pure CPU work
+Because of the GIL:
+Only one thread runs Python code at a time
+Threads can't use multiple CPU cores for Python code
+I/O operations release the GIL while waiting
+For CPU work:
+Use multiprocessing (creates separate Python processes)
+Each process gets its own GIL
+Enables true parallel execution
+Real-World Analogy
+Imagine a Python interpreter as a single kitchen mixer (GIL):
+Threads: Multiple chefs wait turns to use it (good when they're just prepping ingredients)
+Processes: Multiple kitchens with their own mixers (works for simultaneous baking)
+Code Proof
+import threading
+import time
+
+def io_task():
+    print("Starting I/O wait (releases GIL)")
+    time.sleep(2)  # Simulate I/O wait (releases GIL)
+    print("I/O done")
+
+def cpu_task():
+    print("Starting CPU work (holds GIL)")
+    sum(range(10**7))  # CPU-intensive (holds GIL)
+    print("CPU work done")
+
+# Thread 1: I/O (releases GIL while sleeping)
+threading.Thread(target=io_task).start()
+
+# Thread 2: CPU (can only run when Thread 1 releases GIL)
+threading.Thread(target=cpu_task).start()
+
+Starting I/O wait (releases GIL)  # Thread 1 starts
+Starting CPU work (holds GIL)     # Thread 2 runs IMMEDIATELY 
+CPU work done                     # Because Thread 1 released GIL
+I/O done                          # After sleep finishes
+
+
+Difference b/w multithreading & multiprocessing
+
+For example, in computers we have multiple programs running like browser, powerpoint, calculator. These programs ,basically different processes. If you want to see those processes - ctrl + shift + esc. Each process will have a PID. 
+Multiple threads live within the same process. In the diagram below, the outer block is the process, which has its own virtual memory and address space. It can create multiple threads inside it. 
+Difference is that the thread will share the address space. Address space meaning the space where it stores all the variables etc. Each of these threads will be doing a specific task. They will have their own stack memory etc. The only thing that they will share is the address space,  which means if you have any global variables defined in your program, they can be accessed by these threads. Heap memory can be accessed by these threads
+
+
+
+
+Share data in Multiprocessing
+from multiprocessing import Process
+
+result = []
+def calc_squares(num):
+    for n in num:
+        result.append(n*n)
+    print('inside process ', result)
+
+numbers = [2, 3, 4, 5]
+
+if __name__ == '__main__':
+
+    p1 = Process(target=calc_squares, args=(numbers,))
+    p1.start()
+    p1.join()
+
+    print('outside process ', result)
+
+# Output:
+inside process  [4, 9, 16, 25]
+outside process  []
+
+
+
+
+
+There is a way to share data between multiple processes - using shared memory. When you use shared memory, the memory lives outside the processes. Hence it can be accessed. There are 2 ways of using shared memory - value & array
+
+
+from multiprocessing import Process, Array, Value
+
+# Function to calculate squares of numbers and store them in a shared array
+def calc_squares(num, result, v):
+    for idx, n in enumerate(num):
+        result[idx] = n * n  # Store the square of each number in the shared array
+
+    v.value = 0.0  # Update the shared value (not used in this example)
+
+# List of numbers to calculate squares for
+numbers = [2, 3, 4, 5]
+
+if __name__ == '__main__':
+    # Create a shared array of integers with size 4 (same as the length of the numbers list)
+    result = Array('i', 4)  
+    
+    # Create a shared value of type double with an initial value of 0.0
+    # (Not used in this example, but demonstrates how to create a shared value)
+    v = Value('d', 0.0)  
+
+    # Create a new process to execute the calc_squares function
+    p1 = Process(target=calc_squares, args=(numbers, result, v))
+
+   
+    p1.start() # Start the process
+    p1.join() # Wait for the process to complete
+
+    # Print the contents of the shared array (squares of the numbers)
+    print(result[:])
+
+
+
+
+
+Queue is used to share data between 2 processess. 
+Process No 1  = Parent process
+Process No 2 = Child Process, which is calc_squares function
+
+import multiprocessing
+
+# Function to calculate squares of numbers and put them in a queue
+def calc_squares(num, q):
+    for n in num:
+        q.put(n * n)  # Put the square of each number into the queue
+
+if __name__ == '__main__':
+    # List of numbers to calculate squares for
+    numbers = [2, 3, 4, 5]
+
+    # Create a multiprocessing queue with a size equal to the length of the numbers list
+    q = multiprocessing.Queue(len(numbers))
+    
+    # Create a process to execute the calc_squares function
+    p1 = multiprocessing.Process(target=calc_squares, args=(numbers, q))
+
+    # Start the process
+    p1.start()
+    # Wait for the process to finish
+    p1.join()
+
+    # Retrieve and print all the squared numbers from the queue
+    while q.empty() is False:
+        print(q.get())
+
+
+
+
+
+
+Python has a module called queue which is different from the multiprocessing queue
+
+
+
+Multiprocessing Lock
+Answer:  
+
+In real life, there are some resources that cannot be accessed by 2 people at the same time - say bathroom or toilet. So the bathroom has a lock - because it's a shared resource. 
+
+
+Similarly, in the programming world, whenever 2 processes or threads are trying to access a shared resource, such as memory, files or database, it can create a problem. So we need to protect that access with a lock.
+What happens if we don’t have that protection/lock? Let me explain with a code example for a bank account (deposit and withdraw function)
+import multiprocessing
+
+"""
+This script demonstrates the use of the `multiprocessing` module to simulate concurrent operations on a shared resource (a bank account balance). It includes two functions, 
+`deposit` and `withdraw`, which increment and decrement the balance respectively.
+Functions:
+    deposit(balance):
+        Simulates depositing money into the shared balance. 
+        Increments the balance by 1 in 100 iterations with a delay of 0.01 seconds per iteration.
+    withdraw(balance):
+        Simulates withdrawing money from the shared balance. 
+        Decrements the balance by 1 in 100 iterations with a delay of 0.01 seconds per iteration.
+Main Execution:
+    - Initializes a shared memory object `balance` with an initial value of 200.
+    - Creates two processes: one for depositing and one for withdrawing.
+    - Starts and waits for both processes to complete.
+    - Prints the final balance.
+Note:
+    Due to the lack of synchronization mechanisms (e.g., locks), the final balance may not always be the expected value of 200. The final balance may not always be 200 because the operations on `balance.value` are not synchronized. This can cause race conditions where processes interfere with each other, leading to unexpected results.
+"""
+import time
+
+# Function to simulate depositing money into the balance
+def deposit(balance):
+    for _ in range(100):
+        time.sleep(0.01)  # Simulate some delay
+        balance.value = balance.value + 1  # Increment the balance
+
+# Function to simulate withdrawing money from the balance
+def withdraw(balance):
+    for _ in range(100):
+        time.sleep(0.01)  # Simulate some delay
+        balance.value = balance.value - 1  # Decrement the balance
+
+if __name__ == '__main__':
+    # Shared memory object to hold the balance, initialized to 200
+    balance = multiprocessing.Value('i', 200)
+
+    # Create processes for deposit and withdraw functions
+    d = multiprocessing.Process(target=deposit, args=(balance,))
+    w = multiprocessing.Process(target=withdraw, args=(balance,))
+
+    # Start the processes
+    d.start()
+    w.start()
+
+    # Wait for both processes to complete
+    d.join()
+    w.join()
+
+    # Print the final balance
+    print(balance.value)  # Expected output: 200
+
+
+
+#Output:
+195
+199 (different output on each call)
+#Expected Output: 200
+
+
+Now, let’s use LOCK to lock the access to shared resource
+
+import multiprocessing
+
+"""
+A multiprocessing.Lock is a synchronization primitive used to ensure that only one process can access a shared resource at a time. 
+It is particularly useful in scenarios where multiple processes need to modify a shared resource, such as a variable or a file, 
+and you want to prevent race conditions.
+In this code, the lock is used to synchronize access to the shared `balance` variable. 
+Before modifying the balance, a process acquires the lock using `lock.acquire()`. 
+This ensures that no other process can access the balance until the lock is released using `lock.release()`. 
+By doing so, the lock ensures data consistency and prevents conflicts between the deposit and withdraw operations.
+"""
+import time
+
+def deposit(balance, lock):
+    for _ in range(100):
+        time.sleep(0.01)  # Simulate some processing time
+
+        # Acquire the lock before modifying the shared resource (balance)
+        lock.acquire()
+        balance.value = balance.value + 1
+        # Release the lock after modification to allow other processes to access the resource
+        lock.release()
+
+def withdraw(balance, lock):
+    for _ in range(100):
+        time.sleep(0.01)  # Simulate some processing time
+
+        # Acquire the lock before modifying the shared resource (balance)
+        lock.acquire()
+        balance.value = balance.value - 1
+        # Release the lock after modification to allow other processes to access the resource
+        lock.release()
+        
+if __name__ == '__main__':
+    # Shared variable to hold the balance, initialized to 200
+    balance = multiprocessing.Value('i', 200)
+
+    # Lock to ensure synchronization between processes
+    lock = multiprocessing.Lock()
+    
+    # Create two processes: one for deposit and one for withdraw
+    d = multiprocessing.Process(target=deposit, args=(balance, lock))
+    w = multiprocessing.Process(target=withdraw, args=(balance, lock))
+
+    # Start both processes
+    d.start()
+    w.start()
+    # Wait for both processes to complete
+    d.join()
+    w.join()
+
+    # Print the final value of the balance
+    print(balance.value)
+
+
+
+Multiprocessing Pool
+Answer:  
+Let's look at a program that is calculating the squares of numbers in the array, 
+and look at the internal details how Python will execute this program using the CPU on your computer
+
+
+
+Lets say, your computer has 4 cores. 
+When you execute that program, the OS is going to select one of the cores and this core will execute the entire program. The problem here is you have 3 other cores sitting idle. 
+When you run multiple programs on your computer, most likely they will be doing some work. Let's say if they are not doing some work, then they are sitting idle
+This program is very simple, we have 5 numbers and return the squares. So this program is not computationally intensive - but if you are doing heavy image processing or heavy computation, then giving all work load to 1 core might not be a good idea.
+If you can somehow parallelize your work, then it would be more optimized. 
+Let’s show through a diagram how you can do it.+ 
+
+If you can deploy your code on all the cores and then divide your input to all the cores and they provide the results and aggregate the results back into one output. 
+Here you are utilizing all the cores, of course you have to divide the input and then aggregate the output, but we are using all cores. This is called Parallel Processing
+The process of dividing the input b/w multiple cores is called MAP. The process of aggregating the results back is called REDUCE
+
+Above I have updated the program to use a multiprocessing Pool. Even though visually the program looks the same, internally it has divided the work equally between all cores.
+Also, let me show you how to speed up the process. If you measure the performance here, it's not going to be very different because the task I’m doing is quite simple.
+So let me do some heavy lifting at the function.
+"""
+This script demonstrates the use of multiprocessing to parallelize a computationally intensive task
+and compares its performance with a serialized (non-parallel) approach.
+
+The task involves calculating the sum of squares for a range of numbers.
+"""
+
+from multiprocessing import Pool
+import time
+
+def fn(n):
+    """
+    Function to compute the sum of squares of numbers from 0 to 999.
+    This is a computationally intensive task used to demonstrate parallel processing.
+    
+    Args:
+        n (int): A number (not used in the computation, but required for the map function).
+    
+    Returns:
+        int: The sum of squares of numbers from 0 to 999.
+    """
+    sum = 0
+    for i in range(1000):
+        sum += i * i
+    return sum
+
+if __name__ == '__main__':
+    # Measure the time taken for parallel processing using multiprocessing.Pool
+    t2 = time.time()
+
+    # Create a pool of worker processes and use the map function to distribute the task
+    with Pool() as p:
+        result = p.map(fn, range(100000))  # Parallel computation
+
+    print('pool took: ', time.time() - t2) #pool took:  2.307260036468506
+
+    # Measure the time taken for serialized (non-parallel) processing
+    t1 = time.time()
+
+    result = []
+
+    # Perform the computation in a serialized manner
+    for i in range(100000):
+        result.append(fn(i))
+
+    print('serialization took: ', time.time() - t1) #serialization took:  7.6855788230896
+
+
+PIP
+Answer:  PIP stands for "Pip Installs Packages" and is the default package manager for Python. It allows developers to install and manage third-party libraries and tools not included in the standard Python library.
+Explanation:
+Using pip ensures project modularity by letting you install only the libraries you need. You can even lock the versions using a requirements.txt file, which helps maintain consistency across development, testing, and production environments.
+PIP supports versioning and dependency resolution. You can install specific versions (pip install requests==2.28.1) or upgrade existing packages to the latest compatible version.
+It plays a key role in CI/CD and deployment. For example, during Docker container builds or cloud deployments (e.g., Heroku, AWS Lambda), pip install -r requirements.txt is used to prepare the runtime environment with all dependencies.
+🧩 Real Use Cases:
+Installing Flask or Django for web development.
+Installing pandas, numpy for data analysis.
+Managing dependencies in a requirements.txt file for deployment.
+# Install a package
+pip install flask
+# Check installed packages
+pip list
+# Upgrade a package
+pip install --upgrade requests
+# Uninstall a package
+pip uninstall flask
+# Install all dependencies from a file
+pip install -r requirements.txt
+
+
+PEP8
+Answer:  PEP8 is the official style guide for Python, ensuring that Python code is readable, consistent, and clean across projects.	
+🧠 Interview-Ready Answer (5 Detailed Points):
+It recommends using 4 spaces for indentation, limiting lines to 79 characters, and meaningful naming (e.g., snake_case for variables and functions, CamelCase for classes). This prevents cluttered or confusing code.
+It’s not enforced by Python, but followed strictly in production, large-scale apps, and open-source contributions to keep the code maintainable.
+PEP8 is enforced using tools like flake8, pylint, and black (autoformatter). These tools help automate style checking and formatting, often integrated into CI/CD pipelines or IDEs (like VS Code or PyCharm).
+Violating PEP8 won’t break code, but will affect code quality. In interviews, writing PEP8-compliant code shows maturity and professionalism — even if it's not strictly required.
+🧩 Real-World Use Cases:
+Teams use flake8 in GitHub Actions to fail pull requests that break style rules.
+Developers use black to auto-format code before committing.
+You're building a Flask API for a shopping app, and your team uses flake8 in the CI pipeline to make sure all submitted code is clean, consistent, and readable.
+💻 PEP8-Compliant Real-World Code Snippet
+# app.py
+
+# ✅ Imports are grouped and properly spaced
+from flask import Flask, request, jsonify
+
+# ✅ Class names use CamelCase (not used here, but standard)
+app = Flask(__name__)
+
+# ✅ Function names use snake_case
+@app.route('/add', methods=['POST'])
+def add_item():
+    # ✅ Proper spacing around operators and after commas
+    data = request.get_json()
+
+    # ✅ Line not exceeding 79 characters, response is clear and readable
+    return jsonify({"item": data["name"]})
+
+# ✅ Main block to run Flask app (used in most Flask backends)
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+
+
+ Lambda
+Answer:  A lambda in Python is an anonymous, one-liner function — defined using the lambda keyword instead of def. It's useful when a simple function is needed for a short period, especially as an argument to higher-order functions like map(), filter(), or sorted().	
+🧠 Interview-Ready Answer (5 Detailed Points):
+Syntax: lambda arguments: expression
+ It can take any number of arguments but only one expression, which is evaluated and returned. It cannot contain multiple statements or assignments.
+It promotes concise code and avoids polluting the namespace with function names, especially for small, throwaway operations.
+It's often used with built-in functions like map(), filter(), sorted() for inline, throwaway logic.
+Lambdas help keep the code concise and readable when a full function definition is unnecessary.
+# Use Case: E-commerce API - Sort products by price, filter in-stock items
+
+products = [
+    {"name": "Mouse", "price": 500, "in_stock": True},
+    {"name": "Keyboard", "price": 1000, "in_stock": False},
+    {"name": "Monitor", "price": 7000, "in_stock": True},
+]
+
+# ✅ Sort products by price using a lambda as the sort key
+sorted_products = sorted(products, key=lambda item: item["price"])
+
+# ✅ Filter only in-stock items using a lambda with filter()
+in_stock_products = list(filter(lambda p: p["in_stock"], sorted_products))
+
+# ✅ Use lambda inside map to format product info for API response
+formatted_products = list(map(lambda p: f"{p['name']} - ₹{p['price']}", in_stock_products))
+
+# ✅ Final Output
+for product in formatted_products:
+    print(product)
+
+# Output:
+# Mouse - ₹500
+# Monitor - ₹7000
+
+
+ Function calling in python
+Answer:  Python uses "call by object reference" (aka "call by sharing"), which is neither call by value nor call by reference in the traditional sense.
+✅ Function Calling in Python – 5 Key Points
+Immutable objects (like int, float, str, tuple) behave like call by value — changes inside the function don’t affect the original object.
+Mutable objects (like list, dict, set) behave like call by reference — changes inside the function do affect the original object.
+The function receives a reference to the same object, but reassigning the parameter itself creates a new local object and doesn't affect the original.
+In interviews, always explain this dual behavior with an example using both immutable and mutable types.
+💻 Code Example: Demonstrating Behavior
+# Immutable Example (acts like call by value)
+def update_price(price):
+    price = price + 100  # creates a new int object
+    print("Inside function (price):", price)
+
+original_price = 500
+update_price(original_price)
+print("Outside function (price):", original_price)  # Unchanged
+
+# Mutable Example (acts like call by reference)
+def add_to_cart(cart):
+    cart.append("Laptop")  # modifies the original list
+
+user_cart = ["Mouse"]
+add_to_cart(user_cart)
+print("Outside function (cart):", user_cart)  # Changed
+
+# Reassignment inside mutable (won't affect original reference)
+def reset_cart(cart):
+    cart = []  # cart now points to a new list, original unaffected
+    print("Inside function (reset cart):", cart)
+
+reset_cart(user_cart)
+print("Outside function (cart):", user_cart)  # Still contains previous items
+
+
+ Threads
+Answer: A thread is the smallest unit of execution in a process — in Python, threads are used for concurrent I/O-bound tasks, like file operations, API calls, or user input.
+✅ 1. Threads in Python – 5 Key Points
+Threads share the same memory space, so they’re lightweight and can communicate easily, but are not truly parallel due to the GIL in CPython.
+Useful for tasks that spend time waiting, not computing (like downloading files or logging requests).
+Python provides the threading module to create and manage threads using the Thread class.
+You must synchronize access to shared resources using locks (threading.Lock) to avoid race conditions.
+📌 Real Use Case for Threads: Handling file uploads and email sending in parallel during a user registration process.
+💻 Code Example: Simple Threading
+import threading
+import time
+
+def send_email():
+    print("Sending email...")
+    time.sleep(2)
+    print("Email sent.")
+
+def upload_file():
+    print("Uploading file...")
+    time.sleep(3)
+    print("File uploaded.")
+
+# Create threads
+email_thread = threading.Thread(target=send_email)
+upload_thread = threading.Thread(target=upload_file)
+
+# Start threads
+email_thread.start()
+upload_thread.start()
+
+# Wait for both to finish
+email_thread.join()
+upload_thread.join()
+
+print("Registration complete.")
+
+
+ Multithreading
+Answer: Multithreading is the technique of running multiple threads in the same process to achieve concurrency.
+✅ 2. Multithreading – 5 Key Points
+In Python (due to GIL), multithreading is best for I/O-bound tasks; it does not speed up CPU-bound tasks.
+
+
+Each thread runs independently but shares memory, making synchronization important.
+
+
+Common problems in multithreading include race conditions, deadlocks, and thread starvation — avoid them with locks, semaphores, or queues.
+
+
+Use threading.Thread, threading.Lock, or concurrent.futures.ThreadPoolExecutor for simpler thread management.
+💻 Code Example: Web Scraper with Threads
+import threading
+import time
+import requests
+
+urls = ['https://httpbin.org/delay/2'] * 3
+
+def fetch_url(url):
+    print(f"Fetching {url}")
+    response = requests.get(url)
+    print(f"Done with {url}: {response.status_code}")
+
+threads = [threading.Thread(target=fetch_url, args=(url,)) for url in urls]
+
+start = time.time()
+for t in threads: t.start()
+for t in threads: t.join()
+print("All URLs fetched in:", round(time.time() - start, 2), "seconds")
+
+
+ GIL
+Answer: let's cover GIL (Global Interpreter Lock), a very common interview topic, especially for Python backend or multi-threading roles. GIL (Global Interpreter Lock) is a mutex that allows only one thread to execute Python bytecode at a time, even on multi-core systems.
+✅ GIL in Python – 5 Key Points
+It's specific to CPython (the standard Python implementation) and was introduced to make memory management (reference counting) thread-safe.
+GIL affects multi-threaded Python programs by preventing true parallel execution of Python code — only one thread runs at a time in the interpreter, which can limit performance for CPU-bound tasks.
+GIL does not affect I/O-bound programs (e.g. file, network operations), where threads often wait, allowing other threads to run and making multithreading effective.
+Workarounds include using:
+multiprocessing module for CPU-bound tasks (true parallelism using processes),
+asyncio or threading for I/O-bound tasks,
+or Jython / IronPython which don’t have a GIL.
+📌 Real-World Use Cases
+Web scraping: Threads help for I/O-heavy tasks (GIL doesn't hurt much).
+Image processing or ML tasks: Use multiprocessing instead of threads to bypass GIL and leverage multiple CPU cores.
+Flask/Django servers: Often handle I/O-bound work, so GIL isn't a big problem.
+ETL pipelines: Combine multiprocessing for CPU steps and threads for I/O.
+💻 Code Example: GIL Impact (Threads vs Processes)
+import threading
+import multiprocessing
+import time
+
+def cpu_bound_task():
+    count = 0
+    for _ in range(10**7):
+        count += 1
+
+# Using threading (GIL prevents true parallelism for CPU-bound work)
+start = time.time()
+threads = [threading.Thread(target=cpu_bound_task) for _ in range(2)]
+for t in threads: t.start()
+for t in threads: t.join()
+print("Threading Time:", time.time() - start)
+
+# Using multiprocessing (runs in separate processes, bypassing GIL)
+start = time.time()
+processes = [multiprocessing.Process(target=cpu_bound_task) for _ in range(2)]
+for p in processes: p.start()
+for p in processes: p.join()
+print("Multiprocessing Time:", time.time() - start)
+Threading Time: ~1.5s (serial execution)
+Multiprocessing Time: ~0.8s (true parallel execution)
+
+
+
+ Asyncio / Await
+Answer: asyncio is Python’s built-in library for asynchronous programming using coroutines (async def) — great for I/O-bound operations with high concurrency.
+✅ asyncio – 5 Key Points
+Unlike threads, asyncio is single-threaded and non-blocking. It switches between tasks while waiting (e.g., for network responses).
+async def defines an asynchronous function (a coroutine) and await is used to pause the execution until another coroutine finishes.
+It's best suited for I/O-bound tasks (network calls, file reads, etc.), not CPU-heavy tasks.
+These features are part of the asyncio library, Python's standard way to manage async code.
+Asynchronous code is non-blocking, so you can handle thousands of connections efficiently without creating threads.
+🎯 Real Use Case: Building a real-time web scraper or chatbot that handles many API calls at once without using threads.
+💻 Code Example (With Explanations)
+# Import asyncio and aiohttp (async-capable HTTP client)
+import asyncio
+import aiohttp
+import time
+
+# A list of URLs that simulate a delay (each responds after 2 seconds)
+urls = ['https://httpbin.org/delay/2'] * 3
+
+# Define an async function to fetch data from a URL
+async def fetch(session, url):
+    print(f"Fetching {url}")
+    # Send asynchronous GET request (non-blocking)
+    async with session.get(url) as response:
+        await response.text()  # Wait until response body is read completely
+        print(f"Done with {url}")
+
+# Define the main coroutine that will manage all fetch tasks
+async def main():
+    # Create a session object for all HTTP calls
+    async with aiohttp.ClientSession() as session:
+        # Create a list of coroutine objects
+        tasks = [fetch(session, url) for url in urls]
+        # Run them concurrently
+        await asyncio.gather(*tasks)
+
+# Measure total execution time
+start = time.time()
+asyncio.run(main())  # Run the main async function
+print("All URLs fetched in:", round(time.time() - start, 2), "seconds")
+
+🔁 Execution Flow
+main() coroutine starts
+It prepares 3 fetch() coroutine objects — doesn't run them yet.
+asyncio.gather(*tasks) starts all coroutines.
+When each fetch() hits await response.text(), it pauses, and Python gives control to the next coroutine.
+When all are done, gather() returns, and the program prints total time.
+Code Explanation:
+
+This is an asynchronous function, also called a coroutine.
+It doesn't run immediately when you call it — it returns a coroutine object (like a "promise to do something later").
+asyncio.gather(*tasks) takes all those coroutine objects and runs them concurrently (not in parallel like multiprocessing, but in a single-threaded event loop).
+The await pauses the current coroutine (main) and gives control to the event loop, which schedules and runs all the fetch() calls at the same time.
+🧠 Key Concepts
+Concurrency: Multiple tasks start, run, and complete in overlapping time — like multitasking on one core.
+Parallelism: Tasks literally run at the same time — on different CPU cores.
+
+
+📌 In asyncio:
+All coroutines are run in a single thread (one CPU core).
+It looks like they run "at the same time", but they take turns — using the event loop.
+When one task waits (e.g. for I/O), others can run.
+
+ Single threaded?
+Answer: Python is not strictly single-threaded — it supports threading, but due to the GIL in CPython, only one thread executes at a time. For CPU-bound parallelism, use multiprocessing. For non-blocking I/O, use asyncio.
+✅ Is Python Single-Threaded? (Interview Style: 5 Points)
+CPython (most common Python implementation) is single-threaded for bytecode execution due to the Global Interpreter Lock (GIL), which ensures that only one thread executes Python bytecode at a time, even on multi-core CPUs.
+
+
+This doesn’t mean Python can't use threads — you can create multiple threads (with the threading module), but they won't run Python code in true parallel (useful only for I/O-bound tasks, not CPU-bound).
+
+
+To achieve true parallelism for CPU-heavy tasks, you must use multiprocessing, which starts multiple processes with separate memory space, bypassing the GIL.
+
+
+Asynchronous programming (asyncio) allows Python to be non-blocking and handle many I/O tasks "concurrently" in a single thread by yielding control with await.
+
+
+Alternative Python interpreters like Jython or IronPython don’t have a GIL, but they have other limitations and are rarely used in production.
+.💻Code Example: Demonstrating GIL Limitation with Threads vs Processes
+import threading
+import multiprocessing
+import time
+
+# CPU-bound task: counting to a big number
+def count():
+    x = 0
+    for _ in range(10**7):
+        x += 1
+
+# THREADING example (GIL blocks true parallelism)
+def run_threads():
+    t1 = threading.Thread(target=count)
+    t2 = threading.Thread(target=count)
+    start = time.time()
+    t1.start(); t2.start()
+    t1.join(); t2.join()
+    print("Threading took:", round(time.time() - start, 2), "seconds")
+
+# MULTIPROCESSING example (True parallelism)
+def run_processes():
+    p1 = multiprocessing.Process(target=count)
+    p2 = multiprocessing.Process(target=count)
+    start = time.time()
+    p1.start(); p2.start()
+    p1.join(); p2.join()
+    print("Multiprocessing took:", round(time.time() - start, 2), "seconds")
+
+run_threads()       # Slower due to GIL
+run_processes()     # Faster due to real parallel execution
+
+
+Python Non-Blocking
+Answer: To make Python non-blocking, I use asyncio for I/O-heavy operations like HTTP calls or DB access, where I can await coroutines without freezing the whole program. This helps me build scalable applications like chat servers or scrapers. For CPU-heavy work, I use multiprocessing instead
+5 Key Points
+Non-blocking code means your program doesn't wait idly for a task (like a network call or file read) to finish — it continues doing other work in the meantime.
+You can make Python non-blocking using asynchronous programming (asyncio, await) or multithreading/multiprocessing for I/O and CPU parallelism.
+In asyncio, non-blocking behavior is achieved by using coroutines (async def) and pausing with await so the event loop can switch to other tasks.
+In network programming, non-blocking sockets are used to avoid blocking the whole program when waiting for data.
+📌 Real Use Case: A chatbot server that listens to 1000+ WebSocket connections. If you use blocking code (time.sleep, requests.get), your server freezes. Use asyncio and aiohttp to make it non-blocking and serve all users efficiently.
+❓ Problem Statement: "If await pauses the current coroutine, and asyncio is single-threaded, who is doing the work while the coroutine is paused? In multithreading, threads can work in parallel — but in asyncio, there’s only one thread. So how does anything get done?"
+✅ Short Answer (The Truth Behind async/await)When you await something, you’re waiting for an I/O-bound task (e.g. file read, HTTP request, sleep, DB call). You are not doing the work in Python — instead, you’re asking the OS or an external service to do the work.
+💡 Key Analogy:  Async/await is like being at a restaurant. You place your order (await), and while your food is cooking, the server helps other tables (event loop serves other coroutines). When the food is ready, they come back to you.
+
+
+Child Process
+Answer: I use child processes when I need true parallelism, like processing files, images, or invoking external programs. The multiprocessing module lets me use all CPU cores by spawning independent processes, which bypass the GIL, unlike threads
+5 Points: What is a Child Process in Python?
+A child process is a separate instance of a program launched by a parent process (your main Python script). It runs independently, with its own memory space and CPU time.
+In Python, child processes are created using the multiprocessing or subprocess module — useful for parallel execution, especially for CPU-bound or external command-line work.
+Unlike threads, child processes avoid the Global Interpreter Lock (GIL) — meaning they can truly run in parallel on multiple CPU cores.
+Data sharing between parent and child must happen through queues, pipes, or shared memory, since processes don't share state.
+Real-world use: when you need to run heavy computation in the background, or invoke shell scripts, database backups, or other programs from Python.
+📌 Real Use Case: Parallel Image Processing
+You want to apply filters to 5 large images at once. Instead of doing one-by-one (slow), use multiple child processes — one per image — to speed it up using all CPU cores.
+💻 Code Example: Create Child Processes to Work in Parallel
+import multiprocessing
+import time
+
+# This function is what each child process will run
+def apply_filter(image_id):
+    print(f"Child Process {image_id} started")
+    time.sleep(2)  # Pretend it's applying a heavy image filter
+    print(f"Child Process {image_id} finished")
+
+# This block ensures this only runs in the main process
+if __name__ == "__main__":
+    start = time.time()
+
+    processes = []  # List to hold child process references
+
+    for i in range(3):  # Simulate 3 images
+        p = multiprocessing.Process(target=apply_filter, args=(i,))
+        processes.append(p)
+        p.start()  # Launch child process
+
+    for p in processes:
+        p.join()  # Wait for all processes to finish
+
+    print("All filters applied in", round(time.time() - start, 2), "seconds")
+
+#Output
+Child Process 0 started
+Child Process 1 started
+Child Process 2 started
+Child Process 1 finished
+Child Process 0 finished
+Child Process 2 finished
+All filters applied in 2.0 seconds
+
+
+Polymorphism (Overloading & Overriding)
+Answer: 
+Type
+What It Means
+Python Support?
+Example in Code
+Overriding
+Redefining parent method in child
+✅ Yes
+pay() in child classes
+Overloading
+Same method, different args
+❌ Not direct
+calculate() with default args
+
+
+📌 Interview-Ready Explanation (5 Key Points)
+Polymorphism means “many forms” — the same function or method behaves differently depending on input or context.
+
+
+Method Overloading is defining multiple methods with the same name but different arguments. Python doesn’t support it directly like Java/C++; it uses default arguments or *args to simulate it.
+
+
+Method Overriding means redefining a method from a parent class in a child class, allowing customized behavior.
+
+
+Polymorphism helps in writing clean, extensible, and reusable code — especially in frameworks, APIs, and large-scale systems.
+
+
+It’s commonly used in Django, FastAPI, and OOP-based architectures where objects behave differently based on the context.
+📌 Real-World Use Case Example:
+Imagine a system that processes payments. It can take CreditCard, PayPal, or UPI — all having a .pay() method, but each does it differently. This is polymorphism.
+💻 Code Snippet with Line-by-Line Explanation
+from abc import ABC, abstractmethod
+
+# Base class for all payment methods (abstract class)
+class PaymentMethod(ABC):
+    @abstractmethod
+    def pay(self, amount):
+        pass
+    # Abstract method to be overridden
+
+# Child class 1
+class CreditCardPayment(PaymentMethod):
+    def pay(self, amount):
+        print(f"Paid ₹{amount} using Credit Card")
+    # Overriding the 'pay' method
+
+# Child class 2
+class PayPalPayment(PaymentMethod):
+    def pay(self, amount):
+        print(f"Paid ₹{amount} via PayPal")
+    # Overriding the same 'pay' method differently
+
+# Simulating method overloading using default argument
+class DiscountCalculator:
+    def calculate(self, amount, discount=0):
+        final_price = amount - (amount * discount / 100)
+        print(f"Final price: ₹{final_price}")
+    # Same method used for single or two parameters => acts like overloading
+
+# Main function demonstrating polymorphism
+def checkout(payment_method: PaymentMethod, amount: int):
+    payment_method.pay(amount)
+    # This will call the appropriate 'pay' method based on the object passed
+
+# Usage
+credit = CreditCardPayment()
+paypal = PayPalPayment()
+discount = DiscountCalculator()
+
+checkout(credit, 1000)      # Calls CreditCardPayment.pay
+checkout(paypal, 1500)      # Calls PayPalPayment.pay
+discount.calculate(1000)    # Acts like method overloading
+discount.calculate(1000, 10)
+
+
+Memory Management
+Answer: Python handles memory using reference counting and a cyclic garbage collector. The memory manager efficiently reuses memory through PyMalloc. I’ve worked on memory-sensitive tasks like large CSV parsing, where I used gc.collect() to manage cycles and ensure efficient memory use.
+✅ Interview Answer: How is memory managed in Python?
+Automatic Memory Management:
+ Python uses a built-in memory manager that handles allocation and deallocation of memory automatically — so developers don’t manually free memory like in C/C++.
+
+
+Reference Counting:
+ Every object has a reference count — how many variables point to it. When the count drops to zero, the object is immediately destroyed.
+
+
+Garbage Collection:
+ Python has a cyclic garbage collector to clean up objects involved in reference cycles (e.g., object A references B and B references A — no one else does).
+
+
+Memory Pools (PyMalloc):
+ Python uses its own internal memory allocator (PyMalloc) to reduce overhead for small objects. It maintains free lists and memory blocks for reuse.
+
+
+Object Lifecycle Management:
+ The memory manager ensures efficient use of RAM — unused objects are collected and freed, while large objects are managed separately using OS-level mechanisms.
+📌 Real-World Use Case
+In a data processing pipeline (e.g., reading millions of rows from a CSV), Python's memory manager reuses memory for rows that are no longer referenced, keeping memory usage reasonable even in large-scale tasks.
+💻 Code Example: Reference Count and Garbage Collection
+import sys
+import gc
+
+class Person:
+    def __init__(self, name):
+        # Initialize Person object with name and friend reference
+        self.name = name
+        self.friend = None
+
+# Create two people and make them refer to each other
+p1 = Person("Alice")
+p2 = Person("Bob")
+p1.friend = p2  # Alice's friend is Bob
+p2.friend = p1  # Bob's friend is Alice
+
+# Show reference count (Note: +1 due to sys.getrefcount temporary ref)
+# sys.getrefcount() returns the number of references to the object passed to it,
+# but it temporarily increments the reference count of the object,
+# so the output will be the actual reference count +1 due to this temporary reference.
+print("Reference count for p1:", sys.getrefcount(p1))  # Output: 3 or more
+
+# Delete both references
+del p1
+del p2
+
+# Now the objects are in a reference cycle; regular ref counting won't clean this up,
+# as both objects still refer to each other.
+# We manually run garbage collection to clean cycles
+print("Collecting garbage...")
+collected = gc.collect()  # This will collect cyclic references
+print("Unreachable objects collected:", collected)
+
+
+
+The sys.getrefcount() function is used to display the reference count for p1. This function shows how many references exist to the object p1. The count is higher than expected because sys.getrefcount() temporarily adds its own reference to the object while calculating the count.
+Breakdown of References:
+1st Reference: The variable p1.
+2nd Reference: The friend attribute of p2 (p2.friend = p1).
+3rd Reference: The temporary reference created by sys.getrefcount() during the function call.
+Next, both p1 and p2 are deleted using the del statement. However, even though the variables p1 and p2 are deleted, the objects they referenced are not immediately removed from memory because they are part of a reference cycle. Each object still has a reference to the other through the friend attribute, preventing Python's reference counting mechanism from deallocating them.
+To resolve this, the gc.collect() function is called. This function triggers Python's garbage collector, which is capable of identifying and cleaning up cyclic references. The number of unreachable objects collected by the garbage collector is printed, indicating that the cyclic references have been successfully handled.
+
+Operator Overloading in Python
+Answer: 
+📌 Interview Answer – 5 Points
+Operator overloading lets you define or change the behavior of standard Python operators (+, -, *, ==, etc.) for your own objects.
+You override magic methods like __add__, __eq__, __mul__, etc.
+This allows your class to behave like a native data type, improving code readability and integration with Python libraries.
+A clean alternative is to write explicit methods like .add() instead of overloading.
+It’s commonly used in data structures, geometry, money classes, and ORMs (like SQLAlchemy)
+📌 Use Case: Child class overrides __add__ to behave differently from parent.
+💻 Code Example
+class Number:
+    def __init__(self, value):
+        self.value = value
+
+    def __add__(self, other):
+        return Number(self.value + other.value)
+
+class SafeNumber(Number):
+    # Override + to never allow negative results
+    def __add__(self, other):
+        result = self.value + other.value
+        return SafeNumber(max(0, result))
+
+n1 = Number(5)
+n2 = Number(-10)
+print((n1 + n2).value)  # Output: -5 (base class)
+
+s1 = SafeNumber(5)
+s2 = SafeNumber(-10)
+print((s1 + s2).value)  # Output: 0 (overridden in child class)
+
+
+map, reduce
+Answer: 
+📌 5 Key Points
+map() applies a function to each item in a list.
+
+
+reduce() aggregates values using a function (must import from functools).
+
+
+These are part of functional programming in Python.
+
+
+Best used when transforming or summarizing large datasets.
+
+
+Often replaced by list comprehensions or pandas in real-world projects.
+from functools import reduce
+
+nums = [1, 2, 3, 4, 5]
+
+# Map: Square each number
+squares = list(map(lambda x: x**2, nums))  # [1, 4, 9, 16, 25]
+
+# Reduce: Sum of all numbers
+total = reduce(lambda x, y: x + y, nums)  # 15
+
+print(squares)
+print(total)
+
+
