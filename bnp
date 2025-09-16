@@ -1,0 +1,39 @@
+WITH a AS (
+  SELECT sub_id, COUNT(*) AS actions_failed_count
+  FROM dpi_dump_admin.actions
+  WHERE status = 'failed'
+  GROUP BY sub_id
+),
+r AS (
+  SELECT sub_id, COUNT(*) AS ref_rows_count
+  FROM dpi_dump_admin.referential_details
+  GROUP BY sub_id
+)
+SELECT
+  COALESCE(a.sub_id, r.sub_id) AS sub_id,
+  COALESCE(a.actions_failed_count, 0) AS actions_failed_count,
+  COALESCE(r.ref_rows_count, 0)       AS ref_rows_count,
+  (COALESCE(a.actions_failed_count,0) = COALESCE(r.ref_rows_count,0)) AS counts_match
+FROM a
+FULL OUTER JOIN r ON a.sub_id = r.sub_id
+ORDER BY sub_id;
+
+WITH a AS (
+  SELECT sub_id, COUNT(*) AS actions_failed_count
+  FROM dpi_dump_admin.actions
+  WHERE status = 'failed'
+  GROUP BY sub_id
+),
+r AS (
+  SELECT sub_id, COUNT(*) AS ref_rows_count
+  FROM dpi_dump_admin.referential_details
+  GROUP BY sub_id
+)
+SELECT
+  COALESCE(a.sub_id, r.sub_id) AS sub_id,
+  COALESCE(a.actions_failed_count, 0) AS actions_failed_count,
+  COALESCE(r.ref_rows_count, 0)       AS ref_rows_count
+FROM a
+FULL OUTER JOIN r ON a.sub_id = r.sub_id
+WHERE COALESCE(a.actions_failed_count,0) <> COALESCE(r.ref_rows_count,0)
+ORDER BY sub_id;
