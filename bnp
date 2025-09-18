@@ -1,39 +1,142 @@
-WITH a AS (
-  SELECT sub_id, COUNT(*) AS actions_failed_count
-  FROM dpi_dump_admin.actions
-  WHERE status = 'failed'
-  GROUP BY sub_id
-),
-r AS (
-  SELECT sub_id, COUNT(*) AS ref_rows_count
-  FROM dpi_dump_admin.referential_details
-  GROUP BY sub_id
-)
-SELECT
-  COALESCE(a.sub_id, r.sub_id) AS sub_id,
-  COALESCE(a.actions_failed_count, 0) AS actions_failed_count,
-  COALESCE(r.ref_rows_count, 0)       AS ref_rows_count,
-  (COALESCE(a.actions_failed_count,0) = COALESCE(r.ref_rows_count,0)) AS counts_match
-FROM a
-FULL OUTER JOIN r ON a.sub_id = r.sub_id
-ORDER BY sub_id;
+from airflow import DAG
+from airflow.utils.dates import days_ago
+from airflow.providers.http.hooks.http import HttpHook
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+from airflow.operators.python import PythonOperator
+from datetime import timedelta
+import json, logging
 
-WITH a AS (
-  SELECT sub_id, COUNT(*) AS actions_failed_count
-  FROM dpi_dump_admin.actions
-  WHERE status = 'failed'
-  GROUP BY sub_id
-),
-r AS (
-  SELECT sub_id, COUNT(*) AS ref_rows_count
-  FROM dpi_dump_admin.referential_details
-  GROUP BY sub_id
-)
-SELECT
-  COALESCE(a.sub_id, r.sub_id) AS sub_id,
-  COALESCE(a.actions_failed_count, 0) AS actions_failed_count,
-  COALESCE(r.ref_rows_count, 0)       AS ref_rows_count
-FROM a
-FULL OUTER JOIN r ON a.sub_id = r.sub_id
-WHERE COALESCE(a.actions_failed_count,0) <> COALESCE(r.ref_rows_count,0)
-ORDER BY sub_id;
+LOGGER = logging.getLogger(__name__)
+
+PG_CONN_ID   = "superset_dump_new"
+ACTIONS_TBL  = "dpi_dump_admin.actions"
+TARGET_TBL   = "dpi_dump_admin.toolbox_failed_subcriptions"  # keep your spelling
+LOOKBACK_MIN = 75
+BATCH_LIMIT  = 300
+
+CREATE_TABLE_SQL = f"""
+CREATE TABLE IF NOT EXISTS {TARGET_TBL} (
+  sub_id          VARCHAR PRIMARY KEY,
+  error_type      TEXT,
+  failed_job      TEXT,
+  failed_task     TEXT,
+  error_code      TEXT,
+  issued_by_flow  TEXT,
+  error_msg       TEXT,
+  hint            TEXT,
+  sentry_event_id TEXT,
+  end_time        TEXT,
+  last_update     timestamptz DEFAULT now()
+);
+"""
+
+def load_last_75m():
+    # 1) Pick distinct failed sub_ids from actions (last 75 min)
+    pick_sql = f"""
+      SELECT DISTINCT sub_id
+      FROM {ACTIONS_TBL}
+      WHERE status = 'failed'
+        AND datetime >= now() - interval '{LOOKBACK_MIN} minutes'
+      ORDER BY datetime DESC
+      LIMIT {BATCH_LIMIT};
+    """
+    pg = PostgresHook(PG_CONN_ID)
+    with pg.get_conn() as conn, conn.cursor() as cur:
+        cur.execute(pick_sql)
+        sub_ids = [r[0] for r in cur.fetchall()]
+    LOGGER.info("Found %d sub_ids", len(sub_ids))
+    if not sub_ids:
+        return
+
+    # 2) Call Toolbox for each sub_id using Basic Auth from connection
+    hook = HttpHook(http_conn_id="toolbox_prd_http", method="GET")
+    rows = []
+    for sid in sub_ids:
+        try:
+            resp = hook.run(
+                endpoint=f"/iv2-subscriptions/failed-sub/{sid}",
+                headers={"Accept": "application/json"},
+            )
+            if resp.status_code in (401,403):
+                raise RuntimeError("Unauthorized (401/403). Check 'toolbox_prd_http' login/password.")
+            resp.raise_for_status()
+            data = resp.json() if resp.text else {}
+
+            # Toolbox may say "NoErrorFound" for some sub_ids; skip those
+            if str(data.get("error_type","")).lower() == "noerrorfound":
+                continue
+
+            err_msg = data.get("error_msg")
+            if isinstance(err_msg, (dict, list)):
+                err_msg = json.dumps(err_msg, ensure_ascii=False)
+
+            row = (
+                sid,
+                data.get("error_type") or "",
+                data.get("failed_job") or "",
+                data.get("failed_task") or "",
+                str(data.get("error_code") or ""),
+                data.get("issued_by_flow") or "",
+                err_msg or "",
+                data.get("hint") or "",
+                ("" if data.get("sentry_event_id") is None else str(data.get("sentry_event_id"))),
+                str(data.get("end_time") or ""),
+            )
+            rows.append(row)
+        except Exception as e:
+            LOGGER.warning("Skip %s due to API error: %s", sid, e)
+
+    if not rows:
+        LOGGER.info("No rows to upsert this run.")
+        return
+
+    # 3) Upsert into Postgres (one row per sub_id)
+    upsert_sql = f"""
+      INSERT INTO {TARGET_TBL}
+        (sub_id, error_type, failed_job, failed_task, error_code,
+         issued_by_flow, error_msg, hint, sentry_event_id, end_time)
+      VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+      ON CONFLICT (sub_id) DO UPDATE SET
+        error_type      = EXCLUDED.error_type,
+        failed_job      = EXCLUDED.failed_job,
+        failed_task     = EXCLUDED.failed_task,
+        error_code      = EXCLUDED.error_code,
+        issued_by_flow  = EXCLUDED.issued_by_flow,
+        error_msg       = EXCLUDED.error_msg,
+        hint            = EXCLUDED.hint,
+        sentry_event_id = EXCLUDED.sentry_event_id,
+        end_time        = EXCLUDED.end_time,
+        last_update     = now();
+    """
+    with pg.get_conn() as conn, conn.cursor() as cur:
+        cur.executemany(upsert_sql, rows)
+        conn.commit()
+    LOGGER.info("Upserted %d rows into %s", len(rows), TARGET_TBL)
+
+default_args = {"owner": "airflow", "retries": 0}
+
+with DAG(
+    dag_id="toolbox_failed_subscriptions_hourly",
+    description="Hourly: read failed actions, call Toolbox, upsert results",
+    start_date=days_ago(1),
+    schedule="@hourly",
+    catchup=False,
+    max_active_runs=1,
+    default_args=default_args,
+    dagrun_timeout=timedelta(minutes=30),
+    tags=["toolbox","failed","hourly"],
+) as dag:
+
+    ensure_table = SQLExecuteQueryOperator(
+        task_id="ensure_target_table_exists",
+        conn_id=PG_CONN_ID,
+        sql=CREATE_TABLE_SQL,
+    )
+
+    load_task = PythonOperator(
+        task_id="load_last_75m",
+        python_callable=load_last_75m,
+    )
+
+    ensure_table >> load_task
