@@ -1,9 +1,2 @@
-# 1) Show the current service URL:
-echo "$SUPERSET_CONFIG_SERVICE_URL"
-
-# 2) Quick health with curl ignoring TLS (should return 200 headers):
-curl -skI "https://$SUPERSET_CONFIG_SERVICE_URL/health"
-
-# 3) Try Chrome again but explicitly ignore cert errors this time:
-chrome --headless --disable-gpu --no-sandbox --disable-dev-shm-usage \
-  --ignore-certificate-errors --dump-dom "https://$SUPERSET_CONFIG_SERVICE_URL/login/" | head
+P=$(kubectl -n superset-prod get pod -l app=superset-reports-prd-worker -o name | head -1 | sed 's#pod/##'); \
+kubectl -n superset-prod exec -it $P -- sh -lc 'which chromedriver || echo MISSING; which chrome || true; echo $PATH'
