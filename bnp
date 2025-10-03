@@ -1,2 +1,2 @@
-P=$(kubectl -n superset-prod get pod -l app=superset-reports-prd-worker -o name | head -1 | sed 's#pod/##'); \
-kubectl -n superset-prod exec -it $P -- sh -lc 'which chromedriver || echo MISSING; which chrome || true; echo $PATH'
+kubectl get deploy superset-reports-stg-worker -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
+kubectl get deploy superset-reports-prd-worker -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
