@@ -1,14 +1,8 @@
-# 1) save current image (rollback)
-PROD_IMG=$(kubectl -n superset-prod get deploy superset-reports-prd-worker -o jsonpath='{.spec.template.spec.containers[0].image}'); echo $PROD_IMG
-
-# 2) switch workers to the known-good tag used in stg
-REPO=${PROD_IMG%:*}; TAG=4.1.1-2025.07.31-1
-kubectl -n superset-prod set image deploy/superset-reports-prd-worker superset=$REPO:$TAG
-kubectl -n superset-prod rollout status deploy/superset-reports-prd-worker
-
-# 3) verify (all worker pods show the new tag)
-kubectl -n superset-prod get pods -l app=superset-reports-prd-worker -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.spec.containers[0].image}{"\n"}{end}'
-
-# rollback if needed
-kubectl -n superset-prod set image deploy/superset-reports-prd-worker superset=$PROD_IMG && \
-kubectl -n superset-prod rollout status deploy/superset-reports-prd-worker
+SELECT
+  DATE_TRUNC('hour', datetime) AS hour,
+  COUNT(*) AS failure_count
+FROM actions
+WHERE status = 'failed'
+GROUP BY hour
+ORDER BY failure_count DESC
+LIMIT 1;
