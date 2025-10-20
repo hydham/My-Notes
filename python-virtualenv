@@ -1,0 +1,147 @@
+Python Virtual Environments (venv / virtualenv)
+
+Virtual environments are one of the most important tools in Python. They let you create isolated environments so that each project can have its own dependencies and package versions without interfering with the global Python installation.
+
+⸻
+
+Why we need them
+
+Imagine you have two different projects — both need Flask, but one uses Flask 2.2 and another uses Flask 1.1.
+If both rely on your global installation, updating Flask globally could easily break one of the projects.
+
+That’s exactly what a virtual environment solves.
+Each project gets its own local environment, its own site-packages folder, and even its own pip.
+
+⸻
+
+Installing Virtualenv
+
+If it’s not already installed, just type pip install virtualenv.
+Once that’s done, Python will have the tool ready to create isolated environments.
+
+⸻
+
+Creating a workspace
+
+It’s a good idea to keep all environments in one place.
+Let’s make a folder and go inside it:
+
+mkdir environments
+cd environments
+
+When you list files here (ls), it should be empty for now.
+
+⸻
+
+Creating your first environment
+
+Let’s create our first environment named project1_env:
+virtualenv project1_env
+
+When you run this, it sets up the environment and automatically installs pip and setuptools inside it, so you can immediately install new packages.
+
+⸻
+
+Activating the environment
+
+To activate it on macOS or Linux, type:
+source project1_env/bin/activate
+
+On Windows PowerShell, it’s:
+project1_env\Scripts\activate
+
+Once activated, your terminal prompt will change to show (project1_env) — that’s how you know you’re inside it.
+
+⸻
+
+Checking which Python and pip you’re using
+
+Try which python and which pip.
+Both should now point to paths inside /environments/project1_env/bin/ instead of your global ones.
+
+When you run pip list, you’ll notice only pip and setuptools are installed — meaning this environment is clean and isolated.
+
+⸻
+
+Installing packages inside the environment
+
+Now, any package you install with pip will belong only to this environment.
+
+For example:
+pip install numpy psutil requests
+
+After installation, type pip list and you’ll see something like:
+numpy, psutil, and requests — all installed locally inside project1_env.
+
+⸻
+
+Exporting dependencies to a file
+
+Once you have your packages set up, you can freeze their exact versions to share with someone else.
+
+Type pip freeze > requirements.txt
+
+You’ll now have a text file listing all packages with their version numbers, like:
+requests==2.31.0
+numpy==1.26.4
+psutil==5.9.8
+
+⸻
+
+Installing from requirements.txt
+
+If someone else wants the same environment, they just need to run:
+pip install -r requirements.txt
+
+The -r flag tells pip to install everything listed in the file with the exact versions.
+
+⸻
+
+Deactivating the environment
+
+When you’re done working in this environment, type deactivate.
+The prompt will go back to normal, and which python will again point to the global Python installation.
+
+⸻
+
+Deleting an environment
+
+If you want to completely remove it, make sure it’s deactivated first, and then delete the folder:
+rm -rf project1_env
+
+That’s all it takes to cleanly remove a virtual environment.
+
+⸻
+
+Creating an environment with a specific Python version
+
+You can also specify which Python interpreter you want when creating an environment.
+For example:
+virtualenv -p /usr/bin/python3.10 py310_env
+
+Or for older versions:
+virtualenv -p /usr/bin/python2.6 py26_env
+
+Then activate it using source py26_env/bin/activate, and check the version with python –version.
+You’ll see that the environment is running that specific Python version.
+
+Now you can also install your saved requirements into this environment:
+pip install -r requirements.txt
+
+⸻
+
+Important reminder about where to keep your code
+
+Virtual environments are not meant to store your actual project files.
+They are only for dependencies.
+So don’t build your app inside project1_env.
+
+Instead, your project should live outside the environment. A good layout looks like this:
+
+my_project/
+├── venv/ ← your virtual environment
+├── app.py
+├── requirements.txt
+└── README.md
+
+That way, if you ever delete the environment, your code stays safe.
