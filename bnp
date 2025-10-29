@@ -1,6 +1,9 @@
-TOKEN=$(curl -s --fail-with-body --cacert "$SSL_CERT_FILE" \
+curl --fail-with-body -v \
+  --cacert certs/svcvanish-client-stg.crt \
+  -H "Content-Type: application/x-www-form-urlencoded" \
   -d grant_type=client_credentials \
   -d client_id=vanish-stg \
   -d client_secret:'<secret>' \
   https://robotic-auth.staging.echonet/auth/realms/production/protocol/openid-connect/token \
-  | python -c "import sys,json;print(json.load(sys.stdin)['access_token'])")
+  -o token.json
+echo "curl exit=$?"; type token.json
