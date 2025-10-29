@@ -1,33 +1,6 @@
-2025-10-15 — Debugging missing sub_ids in KPI / Toolbox feed
-
-I noticed several failed subscriptions were visible in the DPI data but missing from our Superset table. For one concrete case, the action showed datetime = 13:10 (UTC) and later changed to failed at 15:52. Our 16:15 DAG run didn’t pick it.
-
-First I checked the Airflow query window to rule out a bug there. I verified what “now()” and “date_trunc(‘hour’, now()) - interval ‘2 hours’” evaluate to, and confirmed the window math was correct. I also tested explicit start/end timestamps and tried AT TIME ZONE 'UTC' to exclude a timezone mismatch. The window was fine.
-
-Next I traced the actions view back to its source. The datetime in actions is the start time of an action, not the time when the status flips to failed/success. Also, actions only contains terminal states (success/failed)—it doesn’t include running/pending rows. That explains the misses: if an action starts at 13:10 and only fails at 15:52, a 2-hour window around 13:15 won’t catch it yet.
-
-To prove it, I looked in the DPI core tables. In deployment I found the same action with:
-	•	created_at ≈ 13:10 (start)
-	•	updated_at ≈ 15:52 (when it actually failed)
-
-So the root cause is filtering by start time (actions.datetime) instead of status time (deployment.updated_at).
-
-Fix I put in place (temporary but effective)
-	•	Switched the DAG’s selector to use deployment.updated_at time (joined through workspace to get the sub_id) so we filter by when the status changed.
-	•	Increased the default lookback to 5 hours so late failures are included even if they lag a bit.
-	•	Added a lightweight late-sweep over the last 24 hours that inserts any failed sub_id not yet present in our target table (safety net).
-	•	Kept sub_id as the primary key and continue to UPSERT so reruns just refresh the latest fields.
-	•	Parameterized lookback_hours, end_utc, and batch_limit via dag_run.conf so I can backfill or widen the window without code changes.
-	•	Improved logging: I now log the exact sub_ids selected, the ones skipped with “NoErrorFound” from Toolbox, and the final rows upserted.
-
-Backfill
-I ran a manual 24-hour sweep and inserted the missing rows (≈183). Spot checks against DPI confirmed they’re now present.
-
-Next step (to simplify again)
-I’ll ask the DPI team to expose updated_at in the actions view. Once that’s available, I can revert to a single, lighter query on actions without the explicit join to deployment.
-
-Notes I used while validating
-	•	Compare counts in the exact run window (actions side) vs what the DAG printed in logs.
-	•	For time checks I queried:
-now(); and date_trunc(‘hour’, now()) - interval ‘2 hours’
-then compared to explicit timestamps that match a DAG run time.
+curl -v --fail-with-body -k \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials" \
+  -d "client_id=<YOUR_STG_CLIENT_ID>" \
+  -d "client_secret=<YOUR_STG_CLIENT_SECRET>" \
+  "https://robotic-auth.staging.echonet/auth/realms/master/protocol/openid-connect/token"
