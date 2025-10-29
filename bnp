@@ -1,6 +1,6 @@
-TOKEN="<paste access_token>"
-curl -v -k \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '["sqlserver-iv2:notag"]' \
-  "https://vanish-api-stg.xmp.net.intra/vanish/api/v1/flows/reports/dependencies?depth_level=1&page=1&size=1000"
+TOKEN=$(curl -s --fail-with-body --cacert "$SSL_CERT_FILE" \
+  -d grant_type=client_credentials \
+  -d client_id=vanish-stg \
+  -d client_secret:'<secret>' \
+  https://robotic-auth.staging.echonet/auth/realms/production/protocol/openid-connect/token \
+  | python -c "import sys,json;print(json.load(sys.stdin)['access_token'])")
