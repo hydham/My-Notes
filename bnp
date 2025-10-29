@@ -1,9 +1,5 @@
-curl --fail-with-body -v \
-  --cacert certs/svcvanish-client-stg.crt \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d grant_type=client_credentials \
-  -d client_id=vanish-stg \
-  -d client_secret:'<secret>' \
-  https://robotic-auth.staging.echonet/auth/realms/production/protocol/openid-connect/token \
-  -o token.json
-echo "curl exit=$?"; type token.json
+python - <<'PY'
+import sys,base64,json
+p=sys.argv[1].split('.')[1]+'='*((4-len(sys.argv[1].split('.')[1])%4)%4)
+print(json.loads(base64.urlsafe_b64decode(p)))
+PY "$TOKEN"
