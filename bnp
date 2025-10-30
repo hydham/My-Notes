@@ -1,8 +1,2 @@
-export CACERT="$PWD/certs/svcvanish-client-stg.crt"
-
-curl -v --fail-with-body --cacert "$CACERT" \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d grant_type=client_credentials \
-  -d client_id=vanish-stg \
-  -d client_secret='00726c0c-05be-422a-af06-82f82ca9c211' \
-  https://robotic-auth.cib.echonet/auth/realms/production/protocol/openid-connect/token
+curl -k -H "Authorization: Bearer $TOKEN" \
+     https://robotic-vanish-stg.xmp.net.intra/vanish/api/v1/flows
