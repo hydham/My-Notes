@@ -1,31 +1,8 @@
-API_HOST=robotic-vanish-stg.xmp.net.intra
-REALM_URL=https://robotic-auth.staging.echonet/auth/realms/master
-CACERT=certs/svcvanish-client-stg.crt
-CLIENT_ID=vanish-stg   # from Vault (STG)
-CLIENT_SECRET=...      # from Vault (STG)
-
+export CACERT="$PWD/certs/svcvanish-client-stg.crt"
 
 curl -v --fail-with-body --cacert "$CACERT" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d grant_type=client_credentials \
-  -d client_id="$CLIENT_ID" -d client_secret="$CLIENT_SECRET" \
-  "$REALM_URL/protocol/openid-connect/token" -o token.json
-jq . token.json
-
-python - <<'PY'
-import json,base64
-t=json.load(open("token.json"))["access_token"]
-p=t.split('.')[1]+'='*((4-len(t.split('.')[1])%4)%4)
-print(json.loads(base64.urlsafe_b64decode(p)))
-PY
-
-TOKEN=$(jq -r .access_token token.json)
-curl -v --fail-with-body --cacert "$CACERT" \
-  -H "Authorization: Bearer $TOKEN" \
-  "https://$API_HOST/vanish/api/v1/health"
-
-curl -v --fail-with-body --cacert "$CACERT" \
-  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -H "x-tenant-id: default" \
-  -d '["sqlserver-iv2:notag"]' \
-  "https://$API_HOST/vanish/api/v1/flows/reports/dependencies?depth_level=1&page=1&size=10"
+  -d client_id=vanish-stg \
+  -d client_secret='00726c0c-05be-422a-af06-82f82ca9c211' \
+  https://robotic-auth.cib.echonet/auth/realms/production/protocol/openid-connect/token
