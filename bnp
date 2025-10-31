@@ -8,3 +8,17 @@ curl -v --fail-with-body --cacert "$CACERT" \
   -H "Content-Type: application/json" \
   -d '["sqlserver-iv2:notag"]' \
   "$API/flows/reports/dependencies?depth_level=1&page=0&size=10"
+
+
+export REALM_URL='https://robotic-auth.cib.echonet/auth/realms/master'
+export CLIENT_ID='tekton'          # or the stg client you were given
+export CLIENT_SECRET='REDACTED'    # paste the secret
+
+TOKEN=$(
+  curl -s --fail --cacert /etc/ssl/certs/ca-certificates.crt \
+    -H 'Content-Type: application/x-www-form-urlencoded' \
+    -d grant_type=client_credentials \
+    -d client_id="$CLIENT_ID" -d client_secret="$CLIENT_SECRET" \
+    "$REALM_URL/protocol/openid-connect/token" | jq -r .access_token
+)
+echo "${#TOKEN}"
