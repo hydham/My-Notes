@@ -1,2 +1,5 @@
-curl -k -H "Authorization: Bearer $TOKEN" \
-     https://robotic-vanish-stg.xmp.net.intra/vanish/api/v1/flows
+curl -i --fail --cacert /etc/ssl/certs/ca-certificates.crt \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" -H "Accept: application/json" \
+  -d '[{"name":"create_and_sign_robotic_certificate","version":"2.0"}]' \
+  https://robotic-vanish-stg.xmp.net.intra/vanish/api/v1/flows/dependencies
