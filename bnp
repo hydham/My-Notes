@@ -22,3 +22,14 @@ TOKEN=$(
     "$REALM_URL/protocol/openid-connect/token" | jq -r .access_token
 )
 echo "${#TOKEN}"
+
+# Set once
+API="https://robotic-vanish-stg.xmp.net.intra/vanish/api/v1"
+CACERT="/etc/ssl/certs/ca-certificates.crt"   # BNP CA bundle
+# TOKEN must already be exported
+
+# GET flows (prints only HTTP status code)
+curl -s -o /dev/null -w "%{http_code}\n" --cacert "$CACERT" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "x-tenant-id: default" -H "Accept: application/json" \
+  "$API/flows?name=robotic_certificate&flow_type=static&depict=false&page=1&size=50"
