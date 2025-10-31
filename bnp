@@ -1,8 +1,10 @@
-export TOKEN="$TOKEN"   # make it an env var
-python - <<'PY'
-import os, json, base64
-t=os.environ['TOKEN'].split('.')[1]; t+='='*(-len(t)%4)
-p=json.loads(base64.urlsafe_b64decode(t))
-print("iss =",p.get("iss")); print("aud =",p.get("aud"))
-print("azp =",p.get("azp")); print("scope =",p.get("scope"))
-PY
+API="https://robotic-vanish-stg.xmp.net.intra/vanish/api/v1"
+CACERT="/etc/ssl/certs/ca-certificates.crt"
+
+curl -v --fail-with-body --cacert "$CACERT" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "x-tenant-id: default" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '["sqlserver-iv2:notag"]' \
+  "$API/flows/reports/dependencies?depth_level=1&page=0&size=10"
