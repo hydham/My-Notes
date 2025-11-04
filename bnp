@@ -1,45 +1,23 @@
-API="https://robotic-vanish-stg.xmp.net.intra/vanish/api/v1"
-CACERT="/etc/ssl/certs/ca-certificates.crt"
+# --- CONFIG ---
+export REALM_URL="https://robotic-auth.cib.echonet/auth/realms/production/protocol/openid-connect/token"
+export CLIENT_ID="tekton"
+export CLIENT_SECRET="70511dfe-4ca1-4539-be9b-34c3e3b025f6"
+export CACERT="/etc/ssl/certs/ca-certificates.crt"
 
-curl -v --fail-with-body --cacert "$CACERT" \
+# --- GET TOKEN ---
+curl -s --fail --cacert "$CACERT" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials" \
+  -d "client_id=$CLIENT_ID" \
+  -d "client_secret=$CLIENT_SECRET" \
+  "$REALM_URL" > token.json
+
+cat token.json  # check content
+TOKEN=$(grep -o '"access_token":"[^"]*' token.json | cut -d'"' -f4)
+
+# --- CALL API ---
+curl -X POST "https://vanish-api-preprd.xmp.net.intra/vanish/api/v1/flows/reports/dependencies" \
   -H "Authorization: Bearer $TOKEN" \
-  -H "x-tenant-id: default" \
-  -H "Accept: application/json" \
   -H "Content-Type: application/json" \
-  -d '["sqlserver-iv2:notag"]' \
-  "$API/flows/reports/dependencies?depth_level=1&page=0&size=10"
-
-
-export REALM_URL='https://robotic-auth.cib.echonet/auth/realms/master'
-export CLIENT_ID='tekton'          # or the stg client you were given
-export CLIENT_SECRET='REDACTED'    # paste the secret
-
-TOKEN=$(
-  curl -s --fail --cacert /etc/ssl/certs/ca-certificates.crt \
-    -H 'Content-Type: application/x-www-form-urlencoded' \
-    -d grant_type=client_credentials \
-    -d client_id="$CLIENT_ID" -d client_secret="$CLIENT_SECRET" \
-    "$REALM_URL/protocol/openid-connect/token" | jq -r .access_token
-)
-echo "${#TOKEN}"
-
-# Set once
-API="https://robotic-vanish-stg.xmp.net.intra/vanish/api/v1"
-CACERT="/etc/ssl/certs/ca-certificates.crt"   # BNP CA bundle
-# TOKEN must already be exported
-
-# GET flows (prints only HTTP status code)
-curl -s -o /dev/null -w "%{http_code}\n" --cacert "$CACERT" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "x-tenant-id: default" -H "Accept: application/json" \
-  "$API/flows?name=robotic_certificate&flow_type=static&depict=false&page=1&size=50"
-
-python - <<'PY'
-import httpx, os
-url="https://robotic-auth.cib.echonet/auth/realms/production/.well-known/openid-configuration"
-print(httpx.get(url, verify=os.environ["SSL_CERT_FILE"]).status_code)
-PY
-
-
-
-
+  -d '["windows-iv2-ops-extension:notag"]' \
+  --cacert "$CACERT"
