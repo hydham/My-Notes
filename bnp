@@ -1,23 +1,11 @@
-# --- CONFIG ---
-export REALM_URL="https://robotic-auth.cib.echonet/auth/realms/production/protocol/openid-connect/token"
-export CLIENT_ID="tekton"
-export CLIENT_SECRET="70511dfe-4ca1-4539-be9b-34c3e3b025f6"
-export CACERT="/etc/ssl/certs/ca-certificates.crt"
-
-# --- GET TOKEN ---
-curl -s --fail --cacert "$CACERT" \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=client_credentials" \
-  -d "client_id=$CLIENT_ID" \
-  -d "client_secret=$CLIENT_SECRET" \
-  "$REALM_URL" > token.json
-
-cat token.json  # check content
-TOKEN=$(grep -o '"access_token":"[^"]*' token.json | cut -d'"' -f4)
-
-# --- CALL API ---
-curl -X POST "https://vanish-api-preprd.xmp.net.intra/vanish/api/v1/flows/reports/dependencies" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '["windows-iv2-ops-extension:notag"]' \
-  --cacert "$CACERT"
+SELECT
+    uid,
+    name,
+    jsonb_pretty(provisioning)   AS provisioning,
+    jsonb_pretty(modifications) AS modifications,
+    jsonb_pretty(demolition)    AS demolition
+FROM component
+WHERE
+      provisioning::text  LIKE '%YOUR_FLOW_NAME%'
+   OR modifications::text LIKE '%YOUR_FLOW_NAME%'
+   OR demolition::text    LIKE '%YOUR_FLOW_NAME%';
