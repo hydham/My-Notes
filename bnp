@@ -1,11 +1,1 @@
-SELECT
-    uid,
-    name,
-    jsonb_pretty(provisioning)   AS provisioning,
-    jsonb_pretty(modifications) AS modifications,
-    jsonb_pretty(demolition)    AS demolition
-FROM component
-WHERE
-      provisioning::text  LIKE '%YOUR_FLOW_NAME%'
-   OR modifications::text LIKE '%YOUR_FLOW_NAME%'
-   OR demolition::text    LIKE '%YOUR_FLOW_NAME%';
+https://youtu.be/-fVfkT2fWsM?si=2M5dB4YliPIE-Ixk
