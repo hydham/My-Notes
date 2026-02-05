@@ -1,42 +1,32 @@
-https://youtu.be/-fVfkT2fWsM?si=2M5dB4YliPIE-Ixk
+python3 - <<'PY'
+import json
 
+# read raw multi-line text
+with open("/tmp/pr_description.txt", "r", encoding="utf-8") as f:
+    desc = f.read()
 
-name: debug_dates_servicenow
-description: "Debug planned start/end date templating (no ServiceNow calls)."
+payload = [{
+  "pipelineName": "vanishlib-lint",
+  "templateName": "vanishlib-lint.vanishlib-lint",
+  "namespace": "robotic-vanishlib",
+  "params": {
+    "id": "$(params.id)",
+    "urlfrom": "$(params.urlfrom)",
+    "urloriginfrom": "$(params.urloriginfrom)",
+    "idfrom": "$(params.idfrom)",
+    "displayidfrom": "$(params.displayidfrom)",
+    "commitfrom": "$(params.commitfrom)",
+    "urlto": "$(params.urlto)",
+    "idto": "$(params.idto)",
+    "displayidto": "$(params.displayidto)",
+    "committo": "$(params.committo)",
+    "author_id": "$(params.author_id)",
+    "author_name": "$(params.author_name)",
+    "title": "$(params.title)",
+    "description": desc,
+  }
+}]
 
-inputs:
-  start_date: {type: string, required: false, default: ""}
-  end_date: {type: string, required: false, default: ""}
-
-vars:
-  task_start_date: >-
-    {{
-      inputs.get('start_date')
-      if inputs.get('start_date')
-      else (now | date('%Y-%m-%d %H:%M:%S'))
-    }}
-
-  task_end_date: >-
-    {{
-      inputs.get('end_date')
-      if inputs.get('end_date')
-      else '%Y-%m-%d %H:%M:%S'
-        | strftime(
-            second=(task_start_date | to_datetime).timestamp() + 3600,
-            utc=true
-          )
-    }}
-
-tasks:
-  - name: debug_noop
-    plugin: compute
-    method: assert_condition
-    inputs:
-      assertion: "{{ true }}"
-
-outputs:
-  debug_input_start_date: "{{ inputs.get('start_date') }}"
-  debug_input_end_date: "{{ inputs.get('end_date') }}"
-  debug_task_start_date: "{{ vars.task_start_date }}"
-  debug_task_end_date: "{{ vars.task_end_date }}"
-  debug_now_raw: "{{ now }}"
+with open("/tmp/payload", "w", encoding="utf-8") as f:
+    json.dump(payload, f, ensure_ascii=False)
+PY
