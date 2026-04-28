@@ -1,73 +1,11 @@
+Mode: Dev
 
-Docker commands are always run from the monorepo root using:
-`docker compose -f docker-compose.reporting.yml up`
+Read agent.md. Then implement Step 1 only.
 
-The `vanish/` source folder is bind-mounted into the container for
-hot reload during development. Dependency changes (pyproject.toml,
-poetry.lock, Dockerfile) require a full Docker image rebuild.
+Create vanish/reporting/webapp/database.py with SQLAlchemy engine reading DATABASE_URL from environment, SessionLocal factory, Base declarative base, and get_db dependency that yields a session and closes it.
 
-## Domain Knowledge — Read This Carefully Before Writing Any Code
+Create vanish/reporting/webapp/models.py with two models. First: JobEvidence (table job_evidence) with columns id (integer PK autoincrement), job_id (string not null), job_status (string nullable), top_parent_flow (string nullable), task_name (string not null), task_flow (string nullable), task_status (string nullable), issued_by_flow (string nullable), with_items (text nullable), flow_payloads (JSON nullable), job_updated_at (datetime nullable), created_at (datetime default utcnow). Unique constraint on (job_id, task_name). Second: AnalysisCheckpoint (table analysis_checkpoint) with columns id (integer PK autoincrement), checkpoint_key (string unique not null), last_job_updated_at (datetime not null), updated_at (datetime default utcnow).
 
-**Job:** A single recorded execution of a flow. One flow can have many
-jobs across its lifetime. We only analyze jobs with `updated_at` before
-2026 because jobs from 2026 onwards use a new Vanish implementation
-with a different response format that is not yet supported.
+In webapp/__init__.py add startup event that calls Base.metadata.create_all(bind=engine). Add GET /health endpoint that runs SELECT 1 and returns {"status": "ok", "database": "connected"}.
 
-**Task:** A step inside a job. A task can either run some code or call
-another flow (a subflow). We only care about tasks that call subflows —
-these are the dependency relationships we are mapping.
-
-**Task naming — the double underscore chain:** When a subflow is called
-from a task, and that subflow itself calls another subflow, the task
-names are chained together using double underscores. For example if
-Root Flow has Task A which calls Subflow 1, and Subflow 1 has Task B
-which calls Subflow 2, then from the Root Flow's job perspective the
-task name for the deepest call will be `task_a__task_b`. The depth of
-a subflow in the chain equals the number of segments when you split the
-task name on `__`. This is the ONLY way to determine depth — there is
-no other field for it.
-
-**`issued_by_flow`:** The immediate parent flow that called a subflow.
-It is NOT the root flow at the top of the chain. Using the example
-above, Subflow 2's `issued_by_flow` would be Subflow 1, not Root Flow.
-This field is how we traverse the dependency graph one level at a time.
-
-**`top_parent_flow`:** The root flow at the very top of the chain — the
-flow that the job was originally executed for. This may be different
-from `issued_by_flow` when there are intermediate subflows in the chain.
-
-**`with_items`:** A loop construct. When a task uses `with_items`, it
-loops through a list and calls a flow for each item. Docker creates
-copies of the task suffixed with `_0`, `_1`, `_2`, etc. for each
-resolved call. The original entry may still contain an unresolved Jinja
-template in `task_flow` (e.g. `{{ item.flow_name }}:{{ item.flow_version }}`).
-The suffixed copies will have the resolved flow name. Both the original
-and the copies should be stored.
-
-**Jinja templating:** Flow names and inputs can contain Jinja expressions
-that are resolved at runtime. Store whatever is in the field as-is —
-do not attempt to resolve or clean it.
-
-**Skipped tasks:** If `task_status` is `SKIPPED`, the subflow was never
-actually executed. Store it anyway — it is still valuable evidence of
-a potential dependency path.
-
-## Actual CLI Output — Ground Truth for the Schema
-This is the exact JSON structure the existing CLI produces. The database
-schema must match this precisely — do not invent fields:
-
-```json
-{
-  "job_id": "556bf16f-2a7b-49ae-813c-b1e51e8a9d3f",
-  "job_status": "SUCCESS",
-  "top_parent_flow": "create_access_skeleton_blueprint:1.2",
-  "task_name": "create_required_access_components_0",
-  "task_flow": "unix-iv2:1.1",
-  "task_status": "SKIPPED",
-  "issued_by_flow": "create_access_skeleton_blueprint:1.2",
-  "with_items": null,
-  "flow_payloads": {
-    "application": "NETPAY",
-    "region": "APAC"
-  }
-}
+Comment every function and every non-obvious line. Commit when done.
