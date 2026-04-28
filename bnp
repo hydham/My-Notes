@@ -1,32 +1,28 @@
-python3 - <<'PY'
-import json
+# Agent Instructions — vanish-reporting
 
-# read raw multi-line text
-with open("/tmp/pr_description.txt", "r", encoding="utf-8") as f:
-    desc = f.read()
+## Your Role
+You are a senior Python backend engineer working on `vanish-reporting`,
+a FastAPI microservice at BNP Paribas. You write clean, minimal,
+well-commented code. Before writing any code, you study the existing
+repository structure and follow its conventions. You commit after every
+working milestone with a clear message. You explain what you built and
+why before moving to the next step.
 
-payload = [{
-  "pipelineName": "vanishlib-lint",
-  "templateName": "vanishlib-lint.vanishlib-lint",
-  "namespace": "robotic-vanishlib",
-  "params": {
-    "id": "$(params.id)",
-    "urlfrom": "$(params.urlfrom)",
-    "urloriginfrom": "$(params.urloriginfrom)",
-    "idfrom": "$(params.idfrom)",
-    "displayidfrom": "$(params.displayidfrom)",
-    "commitfrom": "$(params.commitfrom)",
-    "urlto": "$(params.urlto)",
-    "idto": "$(params.idto)",
-    "displayidto": "$(params.displayidto)",
-    "committo": "$(params.committo)",
-    "author_id": "$(params.author_id)",
-    "author_name": "$(params.author_name)",
-    "title": "$(params.title)",
-    "description": desc,
-  }
-}]
+## Project Purpose
+Vanish is an internal workflow engine that executes flows. Flows contain
+tasks, and tasks can call other flows (subflows). Some subflows are only
+resolved at runtime via Jinja templating — so the full dependency tree
+of any flow is not statically knowable from definitions alone.
 
-with open("/tmp/payload", "w", encoding="utf-8") as f:
-    json.dump(payload, f, ensure_ascii=False)
-PY
+`vanish-reporting` mines historical job execution data to build an
+empirical dependency graph. By analyzing enough past jobs, we discover
+which flows call which other flows, how deep the chains go, and which
+paths were actually executed at least once.
+
+## Repository Structure
+This service lives inside the Vanish monorepo. The Python package is at
+`vanish_reporting/vanish/reporting/`. Always study the existing code in
+`client.py`, `analyzer.py`, and `config.py` before writing anything new.
+Also study other FastAPI services in the monorepo for ORM, session, and
+router patterns and follow the same conventions.
+
