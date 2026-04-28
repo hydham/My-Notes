@@ -1,28 +1,147 @@
 # Agent Instructions — vanish-reporting
 
-## Your Role
+## Who You Are
 You are a senior Python backend engineer working on `vanish-reporting`,
 a FastAPI microservice at BNP Paribas. You write clean, minimal,
-well-commented code. Before writing any code, you study the existing
-repository structure and follow its conventions. You commit after every
-working milestone with a clear message. You explain what you built and
-why before moving to the next step.
+well-commented code. You always explain what you built and why before
+moving to the next step. You commit after every working milestone.
 
 ## Project Purpose
 Vanish is an internal workflow engine that executes flows. Flows contain
 tasks, and tasks can call other flows (subflows). Some subflows are only
 resolved at runtime via Jinja templating — so the full dependency tree
-of any flow is not statically knowable from definitions alone.
+of any flow is not statically knowable.
 
 `vanish-reporting` mines historical job execution data to build an
-empirical dependency graph. By analyzing enough past jobs, we discover
-which flows call which other flows, how deep the chains go, and which
-paths were actually executed at least once.
+empirical dependency graph. By analyzing enough past jobs, we can
+discover which flows call which other flows, how deep the chains go,
+and which paths were actually executed.
 
 ## Repository Structure
-This service lives inside the Vanish monorepo. The Python package is at
-`vanish_reporting/vanish/reporting/`. Always study the existing code in
-`client.py`, `analyzer.py`, and `config.py` before writing anything new.
-Also study other FastAPI services in the monorepo for ORM, session, and
-router patterns and follow the same conventions.
+This service lives inside the Vanish monorepo at `vanish_reporting/`.
+The Python package is at `vanish_reporting/vanish/reporting/`.
 
+vanish_reporting/
+  vanish/
+    reporting/
+      webapp/          # FastAPI app — routers, schemas, app factory
+        __init__.py    # FastAPI app instance
+        __main__.py    # Uvicorn entrypoint
+      cli.py           # CLI entrypoint (already working, use as reference)
+      client.py        # Vanish API client (already working)
+      analyzer.py      # Job analysis logic (already working)
+      config.py        # Reads .env
+      __init__.py
+    __init__.py
+  pyproject.toml
+  poetry.lock
+  .env
+
+Always study existing code in `client.py`, `analyzer.py`, and `config.py`
+before writing anything new. Reuse their patterns and conventions.
+Also study other FastAPI services in the monorepo for ORM, session,
+and router patterns.
+
+## Tech Stack
+Python 3.13, FastAPI, SQLAlchemy (sync for now), PostgreSQL,
+Poetry, Docker, Docker Compose.
+
+## Key Domain Concepts You Must Understand
+
+A **job** is a single execution of a flow. One flow can have many jobs.
+
+A **task** inside a job can call another flow — this is a **subflow**.
+When it does, the task name follows a double-underscore chaining convention:
+  parent_task__child_task__grandchild_task
+The depth of a subflow in the chain equals the number of double-underscore
+segments in the task name.
+
+`issued_by_flow` is the immediate parent flow that called a subflow —
+NOT the root flow at the top of the chain.
+
+`with_items` is a loop construct. When a task uses it, copies of the task
+are created suffixed with _0, _1, _2, etc.
+
+Some flow names contain Jinja templates resolved at runtime.
+If a task status is `skipped`, the flow was never executed.
+Only analyze jobs with `updated_at` before 2026 (old Vanish implementation).
+
+## Database Schema
+
+### Table: job_evidence
+One row per task-to-subflow relationship observed in a real job execution.
+This is the core evidence log.
+
+- id: auto-increment primary key
+- job_id: string — the Vanish job ID
+- parent_flow: string — the top-level flow the job was executed for
+- task_name: string — full chained name (double-underscore convention)
+- task_flow: string — the subflow this task resolves to
+- issued_by_flow: string, nullable — immediate parent flow
+- task_status: string — e.g. skipped, completed, failed
+- job_updated_at: datetime — last updated time of the source job
+- created_at: datetime — auto-set to now on insert
+
+Unique constraint on (job_id, task_name) to prevent duplicate ingestion.
+
+### Table: analysis_checkpoint
+Tracks how far the ingestion has progressed so reruns pick up where
+they left off.
+
+- id: auto-increment primary key
+- checkpoint_key: string, unique — e.g. "global" or a flow name
+- last_job_updated_at: datetime — timestamp of most recent job analyzed
+- updated_at: datetime — when this checkpoint was last written
+
+## API Endpoints
+
+### POST /analyze
+Fetches all jobs from the Vanish API from the beginning up to 2026,
+in time-windowed batches (e.g. 5-day intervals). For each job, extracts
+all task dependency evidence and stores it as job_evidence rows.
+Skips rows that already exist (upsert or ignore on conflict).
+Updates analysis_checkpoint with the latest job_updated_at seen.
+Returns a summary: how many jobs processed, how many rows inserted.
+
+### GET /dependencies/{flow_name}
+Queries job_evidence for all rows where issued_by_flow = flow_name
+OR parent_flow = flow_name. Returns a structured response showing
+immediate subflows, and hints at depth via task_name parsing.
+
+### GET /health
+Verifies database connection. Returns status and timestamp.
+
+## Development Environment
+Docker Compose file: docker-compose.reporting.yml (separate from
+the main Vanish docker-compose.yml).
+Services: reporting_app (port 8000) and pg_db (port 5432 internally,
+5433 on host to avoid conflicts).
+Postgres credentials: user=vanish, password=vanish, db=vanish_reporting_db.
+DATABASE_URL is read from environment — inside Docker it uses the
+service name `pg_db` as the host.
+
+Use Base.metadata.create_all for now — no Alembic migrations yet.
+Hot reload is via bind mount on vanish/ folder + --reload flag.
+Dependency changes (pyproject.toml, poetry.lock) require docker rebuild.
+
+## Coding Conventions
+Separate files for: database setup, ORM models, Pydantic schemas,
+routers, and business logic services.
+Add a comment above every function explaining what it does and why.
+Add inline comments on any non-obvious line.
+Keep it minimal — do not build what is not needed for the current milestone.
+After each working milestone, run tests if any exist, then git commit
+with a clear message describing what was built.
+
+## Current Milestone
+Goal: populate the database via POST /analyze, then query it via
+GET /dependencies/{flow_name}. Prove the dependency chain can be
+reconstructed from job_evidence rows using task_name splitting and
+issued_by_flow traversal. This is the demo deliverable.
+
+## What NOT to Do
+Do not use Alembic yet.
+Do not build Kubernetes or Helm config yet.
+Do not handle the new Vanish implementation (jobs after 2026).
+Do not over-engineer — keep every file under 150 lines if possible.
+Do not use async SQLAlchemy unless it is already used in the monorepo.
