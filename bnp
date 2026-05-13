@@ -1,11 +1,117 @@
-Mode: Dev
+# vanish-reporting — Session Context
 
-Read agent.md. Then implement Step 1 only.
+## Project In One Line
+FastAPI microservice inside the Vanish monorepo at BNP Paribas.
+Mines historical Vanish job execution data to build a flow dependency graph.
 
-Create vanish/reporting/webapp/database.py with SQLAlchemy engine reading DATABASE_URL from environment, SessionLocal factory, Base declarative base, and get_db dependency that yields a session and closes it.
+## Current Status
+- Docker Compose working with Postgres
+- Dockerfile working, image builds
+- CLI working (client.py, analyzer.py, config.py) — reuse this logic
+- Folder structure NOT yet created — starting fresh after git reset
+- No models, no endpoints, nothing written yet for the web service
 
-Create vanish/reporting/webapp/models.py with two models. First: JobEvidence (table job_evidence) with columns id (integer PK autoincrement), job_id (string not null), job_status (string nullable), top_parent_flow (string nullable), task_name (string not null), task_flow (string nullable), task_status (string nullable), issued_by_flow (string nullable), with_items (text nullable), flow_payloads (JSON nullable), job_updated_at (datetime nullable), created_at (datetime default utcnow). Unique constraint on (job_id, task_name). Second: AnalysisCheckpoint (table analysis_checkpoint) with columns id (integer PK autoincrement), checkpoint_key (string unique not null), last_job_updated_at (datetime not null), updated_at (datetime default utcnow).
+## Git Situation
+Feature branch: reset to last clean commit before OpenCode changes.
+Starting fresh with correct structure.
 
-In webapp/__init__.py add startup event that calls Base.metadata.create_all(bind=engine). Add GET /health endpoint that runs SELECT 1 and returns {"status": "ok", "database": "connected"}.
+## Agreed Structure
+vanish_reporting/
+  vanish/
+    reporting/
+      api/
+        jobs/
+          router.py      # all job routes
+          schemas.py     # Pydantic schemas for jobs
+      core/
+        config.py        # reads env vars
+      db/
+        session.py       # SQLAlchemy engine, SessionLocal, get_db
+      orm_models/
+        job_evidence.py  # SQLAlchemy table — one row per task
+        checkpoint.py    # tracks last run time
+      webapp/
+        __init__.py      # create_app() factory
+        __main__.py      # uvicorn startup
+      __init__.py
+    __init__.py
+  .env                   # NOT committed
+  .env.example           # COMMITTED
+  pyproject.toml
+  poetry.lock
 
-Comment every function and every non-obvious line. Commit when done.
+notebooks/               # at monorepo root
+  01-jobs-api.ipynb      # test cells for each endpoint
+
+## Database Tables
+
+### job_evidence (one row per task per job)
+id, job_id, job_status, top_parent_flow, task_name, task_flow,
+task_status, issued_by_flow, with_items (nullable), 
+flow_payloads (JSON nullable), job_updated_at (nullable datetime),
+created_at (datetime, default now)
+Unique constraint: (job_id, task_name)
+
+### analysis_checkpoint
+id, checkpoint_key (unique string e.g. "global"),
+last_job_updated_at (datetime), updated_at (datetime, default now)
+
+## API Endpoints (Demo Milestone)
+
+GET  /health              — verify DB connection
+POST /jobs/analyze        — fetch all jobs from Vanish API (pre-2026 only),
+                            extract task evidence, insert into job_evidence,
+                            update checkpoint. Returns summary.
+GET  /jobs                — list all job_evidence rows from DB
+GET  /jobs/{job_id}       — single job's tasks from DB
+
+## CLI Output Shape (actual JSON per record)
+{
+  "job_id": "556bf16f-...",
+  "job_status": "SUCCESS",
+  "top_parent_flow": "create_access_skeleton_blueprint:1.2",
+  "task_name": "create_required_access_components",
+  "task_flow": "{{ item.flow_name }}:{{ item.flow_version }}",
+  "task_status": "SUCCESS",
+  "issued_by_flow": "create_access_skeleton_blueprint:1.2",
+  "with_items": "{{ vars.create_skeleton_flows | find_by_label(...) }}",
+  "flow_payloads": {"application": "NETPAY", "region": "APAC"}
+}
+
+## Domain Knowledge
+- job = single execution of a flow
+- task can call another flow = subflow
+- issued_by_flow = immediate parent, NOT root flow
+- top_parent_flow = root flow
+- task_name depth = task_name.count("__") + 1
+- with_items = loop, creates copies suffixed _0, _1, _2
+- status SKIPPED = flow never executed
+- Only process jobs from 2025 and earlier (old Vanish implementation)
+
+## Tech Stack
+Python 3.13, FastAPI, SQLAlchemy (sync), PostgreSQL,
+Poetry, Docker, Docker Compose
+
+## Env Files
+- monorepo root .env — auto-loaded by Docker Compose, build secrets
+- vanish_reporting/.env — runtime vars (DATABASE_URL, VANISH_*)
+- vanish_reporting/.env.example — committed template
+
+## Teaching Style (from tutorial)
+- One tiny working thing at a time
+- Test in notebook immediately after each endpoint
+- Dummy response first, real data second
+- Schemas before logic
+- Errors debugged together before moving on
+
+## Existing CLI (reuse this logic, don't rewrite)
+vanish_reporting/vanish/reporting/
+  client.py    — Vanish API client, handles auth and pagination
+  analyzer.py  — processes job data, extracts dependency evidence
+  config.py    — reads environment variables
+
+## Next Action
+Step 1: Create the folder structure with empty __init__.py files
+Step 2: Write schemas.py with Task and Job Pydantic models
+Step 3: Test dummy GET /jobs endpoint in notebook
+Then build up from there one step at a time.
