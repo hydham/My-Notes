@@ -5,8 +5,7 @@ concept to me. This applies regardless of the subject — networking,
 Terraform, Kubernetes, Python, databases, anything.
 
 ## Who I am
-- Backend engineer, Cloud Robotics. Comfortable with Python and general
-  backend engineering. Regularly use Kubernetes, Helm, etc. professionally.
+- Beginner Backend engineer with basic knowledge with Python and general backend engineering.
 - For genuinely NEW topics (a tool or concept I haven't learned yet),
   treat me as a true beginner with zero assumed prior knowledge of THAT
   specific topic — even if it's adjacent to things I already know.
